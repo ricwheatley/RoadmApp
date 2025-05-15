@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Api;
@@ -13,11 +13,19 @@ namespace XeroNetStandardApp.Controllers
 {
     public class IdentityInfo : ApiAccessorController<IdentityApi>
     {
+        //  field goes here – inside the class, not above it
+        private readonly IPollingService _pollingService;
 
-        public IdentityInfo(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+        public IdentityInfo(
+            IOptions<XeroConfiguration> xeroConfig,
+            TokenService tokenService,
+            IPollingService pollingService)
             : base(xeroConfig, tokenService)
         {
+            _pollingService = pollingService;
         }
+
+
 
         // GET: /IdentityInfo/
         public async Task<IActionResult> Index()
@@ -79,25 +87,42 @@ namespace XeroNetStandardApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult BulkTrigger(string tenantId, [FromForm] Dictionary<string, string[]> selected)
+        public async Task<IActionResult> BulkTrigger(
+        string tenantId,
+        [FromForm] Dictionary<string, string[]> selected)
         {
-            if (tenantId == "ALL")
+            // nothing ticked?
+            if (selected == null || selected.Count == 0)
             {
-                // Handle logic for all tenants if needed
-                // For now, redirecting to Index
+                TempData["Message"] = "No endpoints selected.";
                 return RedirectToAction("Index");
             }
-            else if (!string.IsNullOrEmpty(tenantId) && selected.TryGetValue(tenantId, out var endpointsForTenant))
+
+            // ── Run for ALL tenants ─────────────────────────────
+            if (tenantId == "ALL")
             {
-                // Redirect to RawSyncController's Run method with selected endpoints
-                return RedirectToAction("Run", "RawSync", new { tenantId = tenantId, selectedEndpoints = endpointsForTenant });
+                foreach (var (tId, endpoints) in selected)
+                {
+                    foreach (var ep in endpoints)
+                        await _pollingService.RunEndpointAsync(tId, ep);
+                }
+            }
+            // ── Run for the single tenant whose button was pressed ─
+            else if (selected.TryGetValue(tenantId, out var endpointsForTenant))
+            {
+                foreach (var ep in endpointsForTenant)
+                    await _pollingService.RunEndpointAsync(tenantId, ep);
             }
             else
             {
                 TempData["Message"] = "No endpoints selected.";
                 return RedirectToAction("Index");
             }
+
+            TempData["Message"] = "Polling triggered.";
+            return RedirectToAction("Index");
         }
+
 
 
         // GET: /Identity#Delete

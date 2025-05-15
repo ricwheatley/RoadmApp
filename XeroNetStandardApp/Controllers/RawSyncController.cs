@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Token;
 using XeroNetStandardApp.Helpers;
 using XeroNetStandardApp.IO;
+using System.Linq;
 
 namespace XeroNetStandardApp.Controllers;
 
@@ -15,23 +16,31 @@ public class RawSyncController : Controller
 {
     private readonly IXeroRawIngestService _svc;
     private readonly ILogger<RawSyncController> _log;
+    private readonly TokenService _tokenService;
 
-    public RawSyncController(IXeroRawIngestService svc, ILogger<RawSyncController> log)
+    public RawSyncController(
+        IXeroRawIngestService svc,
+        ILogger<RawSyncController> log,
+        TokenService tokenService)
     {
         _svc = svc;
         _log = log;
+        _tokenService = tokenService;
     }
 
     [HttpGet("run")]
     public async Task<IActionResult> Run()
     {
-        // pull token & tenant straight from the local file store
-        var store = LocalStorageTokenIO.Instance;
-        var token = store.GetToken();      // returns XeroOAuth2Token
-        var tenantId = store.GetTenantId();   // returns string
+        // Retrieve and decrypt the token using TokenService
+        var token = _tokenService.RetrieveToken();
 
-        if (string.IsNullOrEmpty(token.AccessToken) || string.IsNullOrEmpty(tenantId))
-            return Content("No saved Xero token or tenant ID. Click Connect to Xero first.");
+        if (token == null || string.IsNullOrEmpty(token.AccessToken))
+            return Content("No saved Xero token. Click Connect to Xero first.");
+
+        var tenantId = token.Tenants?.FirstOrDefault()?.TenantId.ToString();
+
+        if (string.IsNullOrEmpty(tenantId))
+            return Content("No tenant ID found in the token.");
 
         var rows = await _svc.RunOnceAsync(token.AccessToken, tenantId);
         _log.LogInformation("Total rows inserted: {Rows}", rows);

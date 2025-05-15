@@ -6,6 +6,7 @@ using Xero.NetStandard.OAuth2.Client;
 using Microsoft.Extensions.Options;
 using Xero.NetStandard.OAuth2.Config;
 using XeroNetStandardApp.IO;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -33,17 +34,20 @@ namespace XeroNetStandardApp.Controllers
             }
         }
 
-        protected BaseXeroOAuth2Controller(IOptions<XeroConfiguration> xeroConfig)
+        protected readonly TokenService _tokenService;
+
+        protected BaseXeroOAuth2Controller(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
         {
             this.xeroConfig = xeroConfig;
-            tokenIO = LocalStorageTokenIO.Instance;
+            _tokenService = tokenService;
+            tokenIO = LocalStorageTokenIO.Instance; // can eventually delete this once all replaced
         }
 
         /// <summary>
         /// Retrieve a valid Xero OAuth2 token
         /// </summary>
         /// <returns>Returns a valid Xero OAuth2 token</returns>
-        private async Task<XeroOAuth2Token> GetXeroOAuth2Token()
+        protected async Task<XeroOAuth2Token> GetXeroOAuth2Token()
         {
             var xeroToken = tokenIO.GetToken();
             var utcTimeNow = DateTime.UtcNow;
@@ -52,7 +56,7 @@ namespace XeroNetStandardApp.Controllers
             {
                 var client = new XeroClient(xeroConfig.Value);
                 xeroToken = (XeroOAuth2Token)await client.RefreshAccessTokenAsync(xeroToken);
-                tokenIO.StoreToken(xeroToken);
+                _tokenService.StoreToken(xeroToken);
             }
 
             return xeroToken;

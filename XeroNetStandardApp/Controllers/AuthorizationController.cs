@@ -4,6 +4,7 @@ using Xero.NetStandard.OAuth2.Config;
 using Xero.NetStandard.OAuth2.Token;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -14,7 +15,8 @@ namespace XeroNetStandardApp.Controllers
     {
         private readonly XeroClient _client;
 
-        public AuthorizationController(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig)
+        public AuthorizationController(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService)
         {
             _client = new XeroClient(xeroConfig.Value);
         }

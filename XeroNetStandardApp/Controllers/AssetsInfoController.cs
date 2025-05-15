@@ -4,13 +4,15 @@ using Xero.NetStandard.OAuth2.Model.Asset;
 using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Config;
 using Microsoft.Extensions.Options;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
     public class AssetsInfo : ApiAccessorController<AssetApi>
     {
 
-        public AssetsInfo(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig) { }
+        public AssetsInfo(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService) { }
 
         // GET: /Assets/
         public async Task<IActionResult> Index()

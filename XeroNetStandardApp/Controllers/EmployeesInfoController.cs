@@ -6,12 +6,14 @@ using Xero.NetStandard.OAuth2.Model.PayrollAu;
 using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Config;
 using Microsoft.Extensions.Options;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
     public class EmployeesInfo : ApiAccessorController<PayrollAuApi>
     {
-        public EmployeesInfo(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig) { }
+        public EmployeesInfo(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService) { }
 
         // GET: /EmployeesInfo/
         public async Task<IActionResult> Index()

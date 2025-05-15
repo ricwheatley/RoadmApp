@@ -1,31 +1,85 @@
-@model dynamic
+﻿@model XeroNetStandardApp.Models.EndpointControlPanelViewModel
 
-<h2>Xero Connections</h2>
+@{
+    ViewBag.Title = "Endpoint Control Panel";
+}
 
-<table class="table-responsive-lg">
-    <tr>
-        <th>Tenant Name</th>
-        <th>Connection ID</th>
-        <th>Tenant ID</th>
-        <th>Tenant Type</th>
-        <th>Updated Date</th>
-        <th>Delete</th>
-    </tr>
-    @foreach (var connection in Model) {
-        <tr>
-            <td>@connection.TenantName</td>
-            <td>@connection.Id</td>
-            <td>@connection.TenantId</td>
-            <td>@connection.TenantType</td>
-            <td>@connection.UpdatedDateUtc.ToString("d/MM/yy")</td>
-            <td>
-                <button onclick="location.href='@Url.Action("Delete", "IdentityInfo", new { connectionId = @connection.Id })'">Delete</button>
-            </td>
-        </tr>
-    }
-</table>
+<h2>Endpoint Control Panel</h2>
 
-<hr/>
-<br/>
+<form method="post" asp-action="BulkTrigger">
+    <table class="table table-bordered align-middle text-center">
+        <thead>
+            <tr>
+                <th>Endpoint</th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th>
+                        @tenant.OrgName
+                        <div class="small mt-1">
+                            <a href="#" class="select-all" data-tenant="@tenant.TenantId">Select All</a>
+                            /
+                            <a href="#" class="select-none" data-tenant="@tenant.TenantId">None</a>
+                        </div>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Button row (row 2) -->
+            <tr>
+                <td>
+                    <button type="submit" name="tenantId" value="ALL" class="btn btn-success btn-sm">
+                        Run All Organisations
+                    </button>
+                </td>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <td>
+                        <button type="submit" name="tenantId" value="@tenant.TenantId" class="btn btn-primary btn-sm">
+                            Run Selected
+                        </button>
+                    </td>
+                }
+            </tr>
+            <!-- Rows for endpoints and checkboxes -->
+            @foreach (var endpoint in Model.Endpoints)
+            {
+                <tr>
+                    <td class="text-start">@endpoint.DisplayName</td>
+                    @foreach (var tenant in Model.Tenants)
+                    {
+                        <td>
+                            <input type="checkbox"
+                                   name="selected[@tenant.TenantId][]"
+                                   value="@endpoint.Key"
+                                   id="cb_@tenant.TenantId@endpoint.Key" />
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</form>
 
-<button onclick="location.href='@Url.Action("Index", "Home")'">Back</button>
+@section Scripts {
+    <script>
+        document.querySelectorAll('.select-all').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var tenantId = this.getAttribute('data-tenant');
+                document.querySelectorAll('input[name^="selected[' + tenantId + ']"]').forEach(function(box) {
+                    box.checked = true;
+                });
+            });
+        });
+        document.querySelectorAll('.select-none').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var tenantId = this.getAttribute('data-tenant');
+                document.querySelectorAll('input[name^="selected[' + tenantId + ']"]').forEach(function(box) {
+                    box.checked = false;
+                });
+            });
+        });
+    </script>
+}

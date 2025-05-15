@@ -9,7 +9,9 @@ namespace XeroNetStandardApp.Controllers
     {
         public IActionResult Index()
         {
-            return View(LocalStorageTokenIO.Instance.TokenExists());
+            var isConnected = LocalStorageTokenIO.Instance.TokenExists();
+            ViewBag.IsConnected = isConnected;
+            return View(isConnected);
         }
 
         public IActionResult Privacy()

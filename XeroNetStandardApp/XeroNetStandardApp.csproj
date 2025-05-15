@@ -9,8 +9,8 @@
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="Xero.NetStandard.OAuth2" Version="10.0.0" />
+    <PackageReference Include="Xero.NetStandard.OAuth2" Version="11.1.1" />
     <PackageReference Include="Xero.NetStandard.OAuth2Client" Version="1.6.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Session" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Session" Version="2.3.0" />
   </ItemGroup>
 </Project>

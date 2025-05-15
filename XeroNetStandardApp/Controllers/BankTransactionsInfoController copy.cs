@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Config;
 using Microsoft.Extensions.Options;
+using XeroNetStandardApp.Services;
 
 
 namespace XeroNetStandardApp.Controllers
@@ -10,7 +11,8 @@ namespace XeroNetStandardApp.Controllers
     public class BankTransactionsInfo : ApiAccessorController<AccountingApi>
     {
 
-        public BankTransactionsInfo(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig) { }
+        public BankTransactionsInfo(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService) { }
 
         // GET: /BankTransactionsInfo/
         public async Task<IActionResult> Index()

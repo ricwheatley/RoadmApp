@@ -6,12 +6,14 @@ using Xero.NetStandard.OAuth2.Model.Accounting;
 using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Config;
 using Microsoft.Extensions.Options;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
     public class InvoiceSync : ApiAccessorController<AccountingApi>
     {
-        public InvoiceSync(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig) { }
+        public InvoiceSync(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService) { }
 
         // GET: /InvoiceSync/
         public async Task<IActionResult> Index()

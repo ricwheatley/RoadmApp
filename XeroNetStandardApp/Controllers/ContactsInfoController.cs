@@ -5,13 +5,16 @@ using Xero.NetStandard.OAuth2.Model.Accounting;
 using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Config;
 using Microsoft.Extensions.Options;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
     public class ContactsInfo : ApiAccessorController<AccountingApi>
     {
 
-        public ContactsInfo(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig) { }
+        public ContactsInfo(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService) { }
+
 
         // GET: /ContactsInfo/
         public async Task<IActionResult> Index()

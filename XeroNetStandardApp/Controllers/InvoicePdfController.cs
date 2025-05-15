@@ -9,13 +9,16 @@ using Xero.NetStandard.OAuth2.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
+using XeroNetStandardApp.Services;
 
 
 namespace XeroNetStandardApp.Controllers
 {
     public class InvoicePdf : ApiAccessorController<AccountingApi>
     {
-        public InvoicePdf(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig) { }
+        public InvoicePdf(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+            : base(xeroConfig, tokenService) { }
+
 
         // GET: /InvoicePdf/
         public async Task<IActionResult> Index()

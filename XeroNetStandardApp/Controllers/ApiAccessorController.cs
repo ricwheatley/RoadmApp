@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Xero.NetStandard.OAuth2.Client;
 using Xero.NetStandard.OAuth2.Config;
+using XeroNetStandardApp.Services;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -12,7 +13,10 @@ namespace XeroNetStandardApp.Controllers
     {
         protected readonly T Api;
 
-        protected ApiAccessorController(IOptions<XeroConfiguration> xeroConfig) : base(xeroConfig)
+        protected ApiAccessorController(
+            IOptions<XeroConfiguration> xeroConfig,
+            TokenService tokenService
+        ) : base(xeroConfig, tokenService)
         {
             Api = new T();
         }

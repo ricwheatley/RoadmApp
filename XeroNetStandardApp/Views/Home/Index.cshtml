@@ -6,9 +6,9 @@
 
 <div>
     @if (Model == false) {
-        <p>
-            <button onclick="location.href='@Url.Action("Index", "Authorization")'">Connect to Xero</button>
-        </p>
+        //<p>
+        //    <button onclick="location.href='@Url.Action("Index", "Authorization")'">Connect to Xero</button>
+        //</p>
     } else {
         <h5>API Sets</h5>
         <p style="color: grey"> You are connected to your Xero organisation. Try the following operations:</p>
@@ -43,11 +43,6 @@
 
             <p><button onclick="location.href='@Url.Action("Index", "IdentityInfo")'">Get Connections</button></p>
         
-            <p> AU Payroll APIs: </p>
-
-            <p><button onclick="location.href='@Url.Action("Index", "EmployeesInfo")'">Get AU Payroll Employees</button></p>
-
-            <p><button onclick="location.href='@Url.Action("Create", "EmployeesInfo")'">Create an AU Payroll Employee</button></p>
         </section>
 
     }

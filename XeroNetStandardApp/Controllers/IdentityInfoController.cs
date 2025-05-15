@@ -81,16 +81,24 @@ namespace XeroNetStandardApp.Controllers
         [HttpPost]
         public IActionResult BulkTrigger(string tenantId, [FromForm] Dictionary<string, string[]> selected)
         {
-            if (selected.TryGetValue(tenantId, out var endpoints))
+            if (tenantId == "ALL")
             {
-                // endpoints = array of endpoint keys selected for this tenant
-                // tenantId = which org to trigger for
-                // TODO: Fire your polling logic here
+                // Handle logic for all tenants if needed
+                // For now, redirecting to Index
+                return RedirectToAction("Index");
             }
-
-            // Optionally: TempData/Message for feedback
-            return RedirectToAction("Index");
+            else if (!string.IsNullOrEmpty(tenantId) && selected.TryGetValue(tenantId, out var endpointsForTenant))
+            {
+                // Redirect to RawSyncController's Run method with selected endpoints
+                return RedirectToAction("Run", "RawSync", new { tenantId = tenantId, selectedEndpoints = endpointsForTenant });
+            }
+            else
+            {
+                TempData["Message"] = "No endpoints selected.";
+                return RedirectToAction("Index");
+            }
         }
+
 
         // GET: /Identity#Delete
         [HttpGet]
@@ -102,5 +110,6 @@ namespace XeroNetStandardApp.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
     }
 }

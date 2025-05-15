@@ -17,6 +17,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddTransient<IXeroRawIngestService, XeroRawIngestService>();
 builder.Services.AddTransient<TokenService>();
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddScoped<IPollingService, PollingService>();
 builder.Services.AddSession();
 builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddDataProtection()

@@ -1,50 +1,53 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using XeroNetStandardApp.Services;
-using Xero.NetStandard.OAuth2.Models;
-using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Xero.NetStandard.OAuth2.Token;
-using XeroNetStandardApp.Helpers;
-using XeroNetStandardApp.IO;
-using System.Linq;
+using XeroNetStandardApp.Services;
 
-namespace XeroNetStandardApp.Controllers;
-
-[Route("raw-sync")]
-public class RawSyncController : Controller
+namespace XeroNetStandardApp.Controllers
 {
-    private readonly IXeroRawIngestService _svc;
-    private readonly ILogger<RawSyncController> _log;
-    private readonly TokenService _tokenService;
-
-    public RawSyncController(
-        IXeroRawIngestService svc,
-        ILogger<RawSyncController> log,
-        TokenService tokenService)
+    // All routes here start with /raw-sync
+    [Route("raw-sync")]
+    public class RawSyncController : Controller
     {
-        _svc = svc;
-        _log = log;
-        _tokenService = tokenService;
-    }
+        private readonly IPollingService _pollingService;
+        private readonly ILogger<RawSyncController> _log;
 
-    [HttpGet("run")]
-    public async Task<IActionResult> Run()
-    {
-        // Retrieve and decrypt the token using TokenService
-        var token = _tokenService.RetrieveToken();
+        public RawSyncController(IPollingService pollingService,
+                                 ILogger<RawSyncController> log)
+        {
+            _pollingService = pollingService;
+            _log = log;
+        }
 
-        if (token == null || string.IsNullOrEmpty(token.AccessToken))
-            return Content("No saved Xero token. Click Connect to Xero first.");
+        // ────────────────────────────────────────────────────────────────
+        // POST  /raw-sync/run    (called from the grid “Run” buttons)
+        // ────────────────────────────────────────────────────────────────
+        [HttpPost("run"), HttpGet("run")]
+        public async Task<IActionResult> Run(string tenantId,
+                                     List<string> selectedEndpoints)
+        {
+            if (selectedEndpoints == null || selectedEndpoints.Count == 0)
+            {
+                TempData["Message"] = "No endpoints selected.";
+                return RedirectToAction("Index", "IdentityInfo");
+            }
 
-        var tenantId = token.Tenants?.FirstOrDefault()?.TenantId.ToString();
+            foreach (var ep in selectedEndpoints)
+                await _pollingService.RunEndpointAsync(tenantId, ep);
 
-        if (string.IsNullOrEmpty(tenantId))
-            return Content("No tenant ID found in the token.");
+            TempData["Message"] = "Polling triggered.";
+            return RedirectToAction("Index", "IdentityInfo");
+        }
 
-        var rows = await _svc.RunOnceAsync(token.AccessToken, tenantId);
-        _log.LogInformation("Total rows inserted: {Rows}", rows);
-
-        return Content($"Inserted {rows} rows into Lucent.raw.*");
+        // ────────────────────────────────────────────────────────────────
+        // OPTIONAL: If someone types /raw-sync in the browser, just send
+        // them back to the control panel rather than a 404.
+        // ────────────────────────────────────────────────────────────────
+        [HttpGet("")]
+        public IActionResult Index()
+        {
+            return RedirectToAction("Index", "IdentityInfo");
+        }
     }
 }

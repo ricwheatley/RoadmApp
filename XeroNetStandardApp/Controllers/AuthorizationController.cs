@@ -50,6 +50,10 @@ namespace XeroNetStandardApp.Controllers
         /// <returns></returns>
         public async Task<IActionResult> Disconnect()
         {
+
+            if (!tokenIO.TokenExists())
+                return RedirectToAction("Index", "Home");
+
             await _client.DeleteConnectionAsync(XeroToken, XeroToken.Tenants[0]);
 
             tokenIO.DestroyToken();

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xero.NetStandard.OAuth2.Config;
+using XeroNetStandardApp.Models;   
+using XeroNetStandardApp.Services; 
 
 namespace XeroNetStandardApp
 {
@@ -21,7 +23,9 @@ namespace XeroNetStandardApp
         {
             services.AddControllersWithViews();
             services.Configure<XeroConfiguration>(Configuration.GetSection("XeroConfiguration"));
+            services.Configure<XeroSyncOptions>(Configuration.GetSection("XeroSync"));
             services.AddHttpClient();
+            services.AddTransient<IXeroRawIngestService, XeroRawIngestService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
             services.AddMvc(options => options.EnableEndpointRouting = false);
@@ -57,11 +61,6 @@ namespace XeroNetStandardApp
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            app.UseStaticFiles();
-
-
-
-            app.UseMvc();
         }
     }
 }

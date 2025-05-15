@@ -34,7 +34,7 @@ namespace XeroNetStandardApp.IO
         /// Get tenant id stored in token
         /// </summary>
         /// <returns>Returns a tenant id inside token</returns>
-        public string GetTenantId();
+        public string? GetTenantId();
 
         /// <summary>
         /// Store tenant id

@@ -18,7 +18,20 @@ namespace XeroNetStandardApp.Controllers
         protected readonly IOptions<XeroConfiguration> xeroConfig;
 
         protected XeroOAuth2Token XeroToken => GetXeroOAuth2Token().Result;
-        protected string TenantId => tokenIO.GetTenantId();
+        protected string? TenantId
+        {
+            get
+            {
+                var id = tokenIO.GetTenantId();
+                if (string.IsNullOrEmpty(id))
+                {
+                    // no token yet – redirect caller to Connect page
+                    HttpContext.Response.Redirect("/Authorization");
+                    return null;
+                }
+                return id;
+            }
+        }
 
         protected BaseXeroOAuth2Controller(IOptions<XeroConfiguration> xeroConfig)
         {

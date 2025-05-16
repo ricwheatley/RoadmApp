@@ -1,31 +1,38 @@
 ﻿using System.Threading.Tasks;
-using XeroNetStandardApp.Services;     // for IXeroRawIngestService
+using Microsoft.Extensions.Logging;              // ← add
+using XeroNetStandardApp.Services;               // IXeroRawIngestService
 using Xero.NetStandard.OAuth2.Token;
 using System;
 
-public class PollingService : IPollingService
+namespace XeroNetStandardApp.Services
 {
-    private readonly TokenService _tokenService;
-    private readonly IXeroRawIngestService _ingestSvc;
-
-    public PollingService(TokenService tokenService,
-                          IXeroRawIngestService ingestSvc)
+    public class PollingService : IPollingService
     {
-        _tokenService = tokenService;
-        _ingestSvc = ingestSvc;
-    }
+        private readonly TokenService _tokenService;
+        private readonly IXeroRawIngestService _ingestSvc;
+        private readonly ILogger<PollingService> _log;            // ← add
 
-    public async Task RunEndpointAsync(string tenantId, string endpointKey)
-    {
-        XeroOAuth2Token? token = _tokenService.RetrieveToken();
-        if (token == null || string.IsNullOrEmpty(token.AccessToken))
-            throw new InvalidOperationException("No valid Xero token on file.");
+        public PollingService(TokenService tokenService,
+                              IXeroRawIngestService ingestSvc,
+                              ILogger<PollingService> log)        // ← add
+        {
+            _tokenService = tokenService;
+            _ingestSvc = ingestSvc;
+            _log = log;                                   // ← store
+        }
 
-        // Your ingest service currently takes only two args (token & tenant).
-        // Call the existing overload so the project compiles.
-        await _ingestSvc.RunOnceAsync(token.AccessToken, tenantId);
+        public async Task RunEndpointAsync(string tenantId, string endpointKey)
+        {
+            // 1. get token
+            XeroOAuth2Token? token = _tokenService.RetrieveToken();
+            if (token == null || string.IsNullOrEmpty(token.AccessToken))
+                throw new InvalidOperationException("No valid Xero token on file.");
 
-        // Later, when you extend IXeroRawIngestService to accept endpointKey,
-        // switch to that new overload here.
+            // 2. run ingest
+            await _ingestSvc.RunOnceAsync(token.AccessToken, tenantId);
+
+            // 3. log
+            _log.LogInformation("Polled {Endpoint} for tenant {Tenant}", endpointKey, tenantId);
+        }
     }
 }

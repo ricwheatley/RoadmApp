@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Xero.NetStandard.OAuth2.Config;
 using XeroNetStandardApp.IO;
 using XeroNetStandardApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -18,7 +19,7 @@ namespace XeroNetStandardApp.Controllers
         protected readonly ITokenIO tokenIO;
         protected readonly IOptions<XeroConfiguration> xeroConfig;
 
-        protected XeroOAuth2Token XeroToken => GetXeroOAuth2Token().Result;
+        protected XeroOAuth2Token? XeroToken => GetXeroOAuth2TokenAsync().Result;
         protected string? TenantId
         {
             get
@@ -35,31 +36,47 @@ namespace XeroNetStandardApp.Controllers
         }
 
         protected readonly TokenService _tokenService;
+        protected readonly ILogger<BaseXeroOAuth2Controller> _logger;
 
-        protected BaseXeroOAuth2Controller(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
+        protected BaseXeroOAuth2Controller(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService, ILogger<BaseXeroOAuth2Controller> logger)
         {
             this.xeroConfig = xeroConfig;
             _tokenService = tokenService;
             tokenIO = LocalStorageTokenIO.Instance; // can eventually delete this once all replaced
+            _logger = logger; 
         }
 
+        
         /// <summary>
         /// Retrieve a valid Xero OAuth2 token
         /// </summary>
         /// <returns>Returns a valid Xero OAuth2 token</returns>
-        protected async Task<XeroOAuth2Token> GetXeroOAuth2Token()
+        protected async Task<XeroOAuth2Token?> GetXeroOAuth2TokenAsync()
         {
-            var xeroToken = tokenIO.GetToken();
-            var utcTimeNow = DateTime.UtcNow;
 
-            if (utcTimeNow > xeroToken.ExpiresAtUtc)
+            // 1.  Load the last-saved token (your TokenService, not tokenIO, if you’ve migrated)
+            var xeroToken = _tokenService.RetrieveToken();
+            if (xeroToken == null) return null;
+
+            // 2.  Refresh only if the access token is past its expiry
+            if (DateTime.UtcNow <= xeroToken.ExpiresAtUtc)
+                return xeroToken;
+
+            try
             {
                 var client = new XeroClient(xeroConfig.Value);
                 xeroToken = (XeroOAuth2Token)await client.RefreshAccessTokenAsync(xeroToken);
                 _tokenService.StoreToken(xeroToken);
+                _logger.LogInformation("Tokem refreshed. Token stored.");
+                return xeroToken;
             }
-
-            return xeroToken;
+            catch (ApiException apiEx) when (apiEx.Message.Contains("invalid_grant"))
+            {
+                // refresh-token is dead → wipe local copy and force re-auth
+                _tokenService.DestroyToken();
+                _logger.LogWarning("Refresh failed (invalid_grant). Token cleared.");
+                return null;
+            }
         }
     }
 }

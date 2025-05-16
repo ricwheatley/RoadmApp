@@ -6,9 +6,7 @@
 
 <div>
     @if (Model == false) {
-        //<p>
-        //    <button onclick="location.href='@Url.Action("Index", "Authorization")'">Connect to Xero</button>
-        //</p>
+
     } else {
         <h5>API Sets</h5>
         <p style="color: grey"> You are connected to your Xero organisation. Try the following operations:</p>
@@ -18,24 +16,8 @@
         <section style="margin-left: 10px">
             <p><button onclick="location.href='@Url.Action("Index", "OrganisationInfo")'">Get Organisation Information</button></p>
 
-            <p><button onclick="location.href='@Url.Action("Index", "ContactsInfo")'">Get Contacts</button></p>
-        
-            <p><button onclick="location.href='@Url.Action("Create", "ContactsInfo")'">Create a Contact</button></p>
-        
-            <p><button onclick="location.href='@Url.Action("Index", "InvoiceSync")'">Get Invoices</button></p>
-        
-            <p><button onclick="location.href='@Url.Action("Create", "InvoiceSync")'">Create an Invoice</button></p>
-
-            <p><button onclick="location.href='@Url.Action("Index", "BankTransactionsInfo")'">Get Bank Transactions</button></p>
         </section>
 
-        <h6> Asset APIs: </h6>
-
-        <section style="margin-left: 10px">
-            <p><button onclick="location.href='@Url.Action("Index", "AssetsInfo")'">Get Fixed Assets</button></p>
-        
-            <p><button onclick="location.href='@Url.Action("Create", "AssetsInfo")'">Create A Fixed Asset</button></p>
-        </section>    
 
         <h6> Identity APIs: </h6>
 

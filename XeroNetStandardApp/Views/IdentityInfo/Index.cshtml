@@ -5,7 +5,12 @@
 }
 
 <h2>Endpoint Control Panel</h2>
-
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">
+        @Html.Raw(TempData["Message"])
+    </div>
+}
 <form method="post" asp-action="BulkTrigger">
     <table class="table table-bordered align-middle text-center">
         <thead>

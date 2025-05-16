@@ -5,6 +5,7 @@ using Xero.NetStandard.OAuth2.Token;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 using XeroNetStandardApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -15,8 +16,8 @@ namespace XeroNetStandardApp.Controllers
     {
         private readonly XeroClient _client;
 
-        public AuthorizationController(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService)
-            : base(xeroConfig, tokenService)
+        public AuthorizationController(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService, ILogger<AuthorizationController> logger)
+            : base(xeroConfig, tokenService, logger)
         {
             _client = new XeroClient(xeroConfig.Value);
         }
@@ -55,6 +56,13 @@ namespace XeroNetStandardApp.Controllers
 
             if (!tokenIO.TokenExists())
                 return RedirectToAction("Index", "Home");
+
+            if (XeroToken == null ||            // token not available
+                XeroToken.Tenants == null ||    // defensive: list itself null
+                XeroToken.Tenants.Count == 0)   // no tenants in the list
+            {
+                return BadRequest("No valid Xero tenant to disconnect.");
+            }
 
             await _client.DeleteConnectionAsync(XeroToken, XeroToken.Tenants[0]);
 

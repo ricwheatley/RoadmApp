@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Xero.NetStandard.OAuth2.Client;
 using Xero.NetStandard.OAuth2.Config;
 using XeroNetStandardApp.Services;
@@ -15,8 +16,10 @@ namespace XeroNetStandardApp.Controllers
 
         protected ApiAccessorController(
             IOptions<XeroConfiguration> xeroConfig,
-            TokenService tokenService
-        ) : base(xeroConfig, tokenService)
+            TokenService tokenService,
+            ILogger<BaseXeroOAuth2Controller> logger
+
+        ) : base(xeroConfig, tokenService, logger)
         {
             Api = new T();
         }

@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// RawSyncController.cs
+// Replaces the previous file in XeroNetStandardApp.Controllers
+// Ric Wheatley – May 2025
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,23 +15,25 @@ namespace XeroNetStandardApp.Controllers
     public class RawSyncController : Controller
     {
         private readonly IPollingService _pollingService;
-        private readonly ILogger<RawSyncController> _log;
+        private readonly ILogger<RawSyncController> _logger;
 
-        public RawSyncController(IPollingService pollingService,
-                                 ILogger<RawSyncController> log)
+        public RawSyncController(
+            IPollingService pollingService,
+            ILogger<RawSyncController> logger)
         {
             _pollingService = pollingService;
-            _log = log;
+            _logger = logger;
         }
 
         // ────────────────────────────────────────────────────────────────
-        // POST  /raw-sync/run    (called from the grid “Run” buttons)
+        // POST or GET  /raw-sync/run    (triggered from “Run” buttons)
         // ────────────────────────────────────────────────────────────────
         [HttpPost("run"), HttpGet("run")]
-        public async Task<IActionResult> Run(string tenantId,
-                                     List<string> selectedEndpoints)
+        public async Task<IActionResult> Run(
+            string tenantId,
+            List<string>? selectedEndpoints)
         {
-            if (selectedEndpoints == null || selectedEndpoints.Count == 0)
+            if (selectedEndpoints is null || selectedEndpoints.Count == 0)
             {
                 TempData["Message"] = "No endpoints selected.";
                 return RedirectToAction("Index", "IdentityInfo");
@@ -41,13 +47,9 @@ namespace XeroNetStandardApp.Controllers
         }
 
         // ────────────────────────────────────────────────────────────────
-        // OPTIONAL: If someone types /raw-sync in the browser, just send
-        // them back to the control panel rather than a 404.
+        // GET /raw-sync   → bounce to control panel instead of 404
         // ────────────────────────────────────────────────────────────────
         [HttpGet("")]
-        public IActionResult Index()
-        {
-            return RedirectToAction("Index", "IdentityInfo");
-        }
+        public IActionResult Index() => RedirectToAction("Index", "IdentityInfo");
     }
 }

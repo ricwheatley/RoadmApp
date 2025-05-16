@@ -1,72 +1,66 @@
+﻿// AuthorizationController.cs
+// Ric Wheatley – May 2025 – final, compiles with SDK ≥5.x
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Client;
 using Xero.NetStandard.OAuth2.Config;
 using Xero.NetStandard.OAuth2.Token;
-using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 using XeroNetStandardApp.Services;
-using Microsoft.Extensions.Logging;
 
 namespace XeroNetStandardApp.Controllers
 {
-    /// <summary>
-    /// Controller managing authorization 
-    /// </summary>
     public class AuthorizationController : BaseXeroOAuth2Controller
     {
         private readonly XeroClient _client;
+        private readonly ILogger<AuthorizationController> _log;
+        private readonly XeroConfiguration _cfg;
 
-        public AuthorizationController(IOptions<XeroConfiguration> xeroConfig, TokenService tokenService, ILogger<AuthorizationController> logger)
-            : base(xeroConfig, tokenService, logger)
+        public AuthorizationController(
+            IOptions<XeroConfiguration> xeroConfig,
+            TokenService tokenService,
+            ILogger<BaseXeroOAuth2Controller> baseLogger,
+            ILogger<AuthorizationController> log)
+            : base(xeroConfig, tokenService, baseLogger)
         {
-            _client = new XeroClient(xeroConfig.Value);
+            _cfg = xeroConfig.Value;
+            _client = new XeroClient(_cfg);               // <- single-arg ctor
+            _log = log;
         }
 
-        /// <summary>
-        /// Index, redirect to login page
-        /// </summary>
-        /// <returns></returns>
+        // GET /Authorization  → Xero login / consent
         public IActionResult Index()
         {
             return Redirect(_client.BuildLoginUri());
         }
 
-        /// <summary>
-        /// Callback for authorization
-        /// </summary>
-        /// <param name="code">Returned code</param>
-        /// <param name="state">Returned state</param>
-        /// <returns>Redirect to organisations page</returns>
+        // GET /Authorization/Callback ← Xero redirects back here
         public async Task<IActionResult> Callback(string code, string state)
         {
-            var xeroToken = (XeroOAuth2Token)await _client.RequestAccessTokenAsync(code);
+            // Simple CSRF check: config.State must match return state
+            if (state != _cfg.State)
+                return BadRequest("State mismatch.");
 
-            tokenIO.StoreToken(xeroToken);
+            var token = (XeroOAuth2Token)await _client.RequestAccessTokenAsync(code);
+
+            _tokenService.StoreToken(token);
+            _log.LogInformation("Xero token stored (expires {Expiry}).", token.ExpiresAtUtc);
 
             return RedirectToAction("Index", "OrganisationInfo");
         }
 
-        /// <summary>
-        /// Disconnect org connections to sample app. Destroys token
-        /// <para>GET /Authorization/Disconnect</para>
-        /// </summary>
-        /// <returns></returns>
+        // GET /Authorization/Disconnect
         public async Task<IActionResult> Disconnect()
         {
+            var token = await GetValidXeroTokenAsync();
+            if (token == null || token.Tenants?.Count == 0)
+                return BadRequest("No connected Xero organisation to disconnect.");
 
-            if (!tokenIO.TokenExists())
-                return RedirectToAction("Index", "Home");
-
-            if (XeroToken == null ||            // token not available
-                XeroToken.Tenants == null ||    // defensive: list itself null
-                XeroToken.Tenants.Count == 0)   // no tenants in the list
-            {
-                return BadRequest("No valid Xero tenant to disconnect.");
-            }
-
-            await _client.DeleteConnectionAsync(XeroToken, XeroToken.Tenants[0]);
-
-            tokenIO.DestroyToken();
+            await _client.DeleteConnectionAsync(token, token.Tenants[0]);
+            _tokenService.DestroyToken();
+            _log.LogInformation("Xero connection revoked and local token destroyed.");
 
             return RedirectToAction("Index", "Home");
         }

@@ -1,3 +1,6 @@
+ï»¿// OrganisationInfo.cs
+// Ric Wheatley â€“ May 2025
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,38 +13,32 @@ namespace XeroNetStandardApp.Controllers
 {
     public class OrganisationInfo : ApiAccessorController<AccountingApi>
     {
+        private readonly ILogger<OrganisationInfo> _log;
+
         public OrganisationInfo(
             IOptions<XeroConfiguration> xeroConfig,
             TokenService tokenService,
-            ILogger<OrganisationInfo> logger)
-            : base(xeroConfig, tokenService, logger)   // your base class handles the logger
+            ILogger<BaseXeroOAuth2Controller> baseLogger,
+            ILogger<OrganisationInfo> log)
+            : base(xeroConfig, tokenService, baseLogger)
         {
+            _log = log;
         }
 
-        // GET: /Organisation/
+        // GET /OrganisationInfo
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Guard clauses remove the CS8602 / CS8604 warnings
-            if (XeroToken?.AccessToken is null || string.IsNullOrWhiteSpace(XeroToken.AccessToken))
-            {
-                // Use whatever shared error view or handler you already have
-                return View("Error");
-            }
+            var token = await GetValidXeroTokenAsync();
+            if (token == null) return RedirectToAction("Index", "Authorization");
 
-            if (string.IsNullOrWhiteSpace(TenantId))
-            {
-                return View("Error");
-            }
+            var tenantId = TenantId;
+            if (tenantId == null) return RedirectToAction("Index", "Authorization");
 
-            // After the checks above, the compiler knows these cannot be null
-            var response =
-                await Api.GetOrganisationsAsync(XeroToken.AccessToken, TenantId);
+            var response = await Api.GetOrganisationsAsync(token.AccessToken, tenantId);
 
             if (response?._Organisations is null || response._Organisations.Count == 0)
-            {
-                return View("NotFound");  // or your preferred “no data” view
-            }
+                return View("NotFound");
 
             return View(response._Organisations[0]);
         }

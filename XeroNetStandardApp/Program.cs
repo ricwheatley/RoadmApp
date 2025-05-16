@@ -14,6 +14,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.Configure<XeroConfiguration>(builder.Configuration.GetSection("XeroConfiguration"));
 builder.Services.Configure<XeroSyncOptions>(builder.Configuration.GetSection("XeroSync"));
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IXeroRawIngestService, XeroRawIngestService>();
 builder.Services.AddTransient<TokenService>();
 builder.Services.AddDistributedMemoryCache();

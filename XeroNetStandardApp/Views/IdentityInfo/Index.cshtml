@@ -1,89 +1,82 @@
 ﻿@model XeroNetStandardApp.Models.EndpointControlPanelViewModel
-
 @{
     ViewBag.Title = "Endpoint Control Panel";
 }
 
 <h2>Endpoint Control Panel</h2>
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-info">
-        @Html.Raw(TempData["Message"])
-    </div>
-}
-<form method="post" asp-action="BulkTrigger">
-    <table class="table table-bordered align-middle text-center">
+
+<form asp-action="BulkTrigger" method="post">
+
+    <table class="table table-sm table-striped">
         <thead>
             <tr>
                 <th>Endpoint</th>
+                @* one header cell per tenant *@
                 @foreach (var tenant in Model.Tenants)
                 {
-                    <th>
-                        @tenant.OrgName
-                        <div class="small mt-1">
-                            <a href="#" class="select-all" data-tenant="@tenant.TenantId">Select All</a>
-                            /
-                            <a href="#" class="select-none" data-tenant="@tenant.TenantId">None</a>
-                        </div>
+                    <th class="text-center">
+                        @tenant.OrgName<br />
+                        <button type="submit"
+                                name="tenantId"
+                                value="@tenant.TenantId"
+                                class="btn btn-primary btn-sm">
+                            Run&nbsp;Selected
+                        </button>
+                    </th>
+                }
+            </tr>
+            <tr>
+                <th></th>
+                @* “select all / none” toggle for each column *@
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">
+                        <input type="checkbox"
+                               class="js-column-toggle"
+                               data-tenant="@tenant.TenantId" />
+                        <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
                     </th>
                 }
             </tr>
         </thead>
+
         <tbody>
-            <!-- Button row (row 2) -->
-            <tr>
-                <td>
-                    <button type="submit" name="tenantId" value="ALL" class="btn btn-success btn-sm">
-                        Run All Organisations
-                    </button>
-                </td>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <td>
-                        <button type="submit" name="tenantId" value="@tenant.TenantId" class="btn btn-primary btn-sm">
-                            Run Selected
-                        </button>
-                    </td>
-                }
-            </tr>
-            <!-- Rows for endpoints and checkboxes -->
+            @* grid: row = endpoint, column = tenant *@
             @foreach (var endpoint in Model.Endpoints)
             {
                 <tr>
-                    <td class="text-start">@endpoint.DisplayName</td>
+                    <td>@endpoint.DisplayName</td>
                     @foreach (var tenant in Model.Tenants)
                     {
-                        <td>
+                        <td class="text-center">
                             <input type="checkbox"
-                                   name="selected[@tenant.TenantId][]"
+                                   name="selected[@tenant.TenantId]"
                                    value="@endpoint.Key"
-                                   id="cb_@tenant.TenantId@endpoint.Key" />
+                                   class="ep-checkbox tenant-@tenant.TenantId" />
                         </td>
                     }
                 </tr>
             }
         </tbody>
     </table>
+
+    <button type="submit"
+            name="tenantId"
+            value="ALL"
+            class="btn btn-success">
+        Run&nbsp;All&nbsp;Organisations
+    </button>
 </form>
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.select-all').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                var tenantId = this.getAttribute('data-tenant');
-                document.querySelectorAll('input[name^="selected[' + tenantId + ']"]').forEach(function(box) {
-                    box.checked = true;
-                });
-            });
-        });
-        document.querySelectorAll('.select-none').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                var tenantId = this.getAttribute('data-tenant');
-                document.querySelectorAll('input[name^="selected[' + tenantId + ']"]').forEach(function(box) {
-                    box.checked = false;
-                });
+        // toggle an entire tenant column
+        document.querySelectorAll('.js-column-toggle')
+                .forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                const tid = this.dataset.tenant;
+                document.querySelectorAll('.tenant-' + tid)
+                        .forEach(cb => cb.checked = toggle.checked);
             });
         });
     </script>

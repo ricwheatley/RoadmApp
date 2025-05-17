@@ -128,29 +128,31 @@ Start your Testing.
 There are three controllers in this MVC app:
 
 **HomeController**
-- checks if there is a xerotoken.json, and 
+- checks if a `token.dat` file exists via the `TokenService`, and
 - passes a boolean firstTimeConnection to view to control the display of buttons. 
 
 **AuthorizationController**
 - reads XeroConfiguration &  make httpClientFactory available via dependency injection
 - on /Authorization/, redirects user to Xero OAuth for authentication & authorization
 - receives callback on /Authorization/Callback request Xero token
-- get connected tenants (organisations) 
-- store token via a static method TokenUtilities.StoreToken(xeroToken);
+- get connected tenants (organisations)
+- stores the token using `TokenService` which encrypts the data to `token.dat`.
 
 **OrganisationInfoController**
 - gets or refreshes stored token
 - make api call to organisation endpoint 
 - displays in view
 
-**ContactInfoController** 
-- gets or refreshes stored token 
+**ContactInfoController**
+- gets or refreshes stored token
 - make api call to contacts endpoint
 - displays in view
 - static view Create.cshtml creates a webform and POST contact info to Create() action, and
-- makes an create operation to contacts endpoint 
+- makes an create operation to contacts endpoint
 
-Xero token is stored in a JSON file in the root of the project "./xerotoken.json". The app serialise and deserialise with the static class functions in /Utilities/TokenUtilities.cs. 
+All controllers derive from **BaseXeroOAuth2Controller**, which exposes `GetValidXeroTokenAsync`. This method automatically refreshes the access token when it is close to expiring, persists the refreshed token using `TokenService`, and clears the stored token if the refresh fails.
+
+Xero tokens are stored encrypted in `token.dat` at the root of the project. The `TokenService` handles encryption and decryption using ASP.NET Core data protection.
 
 ## License
 

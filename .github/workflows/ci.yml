@@ -7,6 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Install npm dependencies
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -15,3 +23,4 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore --configuration Release
+

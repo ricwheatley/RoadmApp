@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 import HomePage from '../HomePage';
+
 
 describe('HomePage', () => {
   test('displays a list of authorised tenants', () => {

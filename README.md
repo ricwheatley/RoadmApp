@@ -128,27 +128,22 @@ Start your Testing.
 There are three controllers in this MVC app:
 
 **HomeController**
-- checks if there is an encrypted Xero token stored, and
-- passes a boolean firstTimeConnection to view to control the display of buttons.
 
-**AuthorizationController**
-- reads XeroConfiguration & makes HttpClientFactory available via dependency injection
-- on /Authorization/, redirects the user to Xero OAuth for authentication & authorization
-- receives callback on /Authorization/Callback to request a Xero token
-- get connected tenants (organisations)
-- store the token using the built-in TokenService
 
 **OrganisationInfoController**
 - gets or refreshes stored token
 - make api call to organisation endpoint 
 - displays in view
 
-**ContactInfoController** 
-- gets or refreshes stored token 
+**ContactInfoController**
+- gets or refreshes stored token
 - make api call to contacts endpoint
 - displays in view
 - static view Create.cshtml creates a webform and POST contact info to Create() action, and
-- makes an create operation to contacts endpoint 
+- makes an create operation to contacts endpoint
+
+All controllers derive from **BaseXeroOAuth2Controller**, which exposes `GetValidXeroTokenAsync`. This method automatically refreshes the access token when it is close to expiring, persists the refreshed token using `TokenService`, and clears the stored token if the refresh fails.
+
 
 
 ## License

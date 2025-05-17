@@ -29,8 +29,11 @@ jobs:
       - name: Install Node dependencies
         run: npm ci                 # uses package-lock.json
 
-      - name: Run Jest suite
-        run: npm test --silent
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Jest suite with coverage
+        run: npm test -- --coverage --runInBand
 
       # -----------------------------------------------------------------------
       # 3.  .NET build & tests

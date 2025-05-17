@@ -115,6 +115,11 @@ namespace XeroNetStandardApp.Controllers
                 var client = new XeroClient(_xeroConfig.Value); // uses default HttpClient internally
                 var newToken = (XeroOAuth2Token)await client.RefreshAccessTokenAsync(token);
 
+                // Xero's refresh endpoint does not return tenant or ID token
+                // information, so preserve these from the previous token.
+                newToken.Tenants = token.Tenants;
+                newToken.IdToken = token.IdToken;
+
                 _tokenService.StoreToken(newToken);
                 _logger.LogInformation("Xero token refreshed successfully (expires {Expiry}).", newToken.ExpiresAtUtc);
 

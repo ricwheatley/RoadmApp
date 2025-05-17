@@ -152,7 +152,11 @@ namespace XeroNetStandardApp.Services
             var expiresIn = JsonDocument.Parse(json).RootElement.GetProperty("expires_in").GetInt32();
             refreshed.ExpiresAtUtc = DateTime.UtcNow.AddSeconds(expiresIn);
 
-            // NB: Xero rotates the refresh-token too
+            // NB: Xero rotates the refresh-token too, but does not return tenant
+            // or ID token information. Preserve these from the previous token.
+            refreshed.Tenants = current.Tenants;
+            refreshed.IdToken = current.IdToken;
+
             _tokenService.StoreToken(refreshed);
 
             _log.LogInformation("Token refreshed, now expires {Expiry:u}", refreshed.ExpiresAtUtc);

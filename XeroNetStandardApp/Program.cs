@@ -56,3 +56,5 @@ app.UseMvc(routes =>
 });
 
 app.Run();
+
+public partial class Program { }

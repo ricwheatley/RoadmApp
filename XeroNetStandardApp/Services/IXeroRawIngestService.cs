@@ -8,9 +8,9 @@ namespace XeroNetStandardApp.Services
     public interface IXeroRawIngestService
     {
         /// Run every configured endpoint for the tenant (existing behaviour).
-        Task<int> RunOnceAsync(string accessToken, string tenantId);
+        Task<int> RunOnceAsync(string tenantId);
 
         /// Run just one endpoint for the tenant (NEW).
-        Task<int> RunOnceAsync(string accessToken, string tenantId, string endpointKey);
+        Task<int> RunOnceAsync(string tenantId, string endpointKey);
     }
 }

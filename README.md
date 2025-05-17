@@ -5,11 +5,11 @@ This is a starter app build with .NET Core 3.1 MVC to demonstrate Xero OAuth 2.0
 
 __IMPORTANT!__ This application is for demo only. We recommend setting up a secure token storage for your production usage.
 
-Its functions include:
+- Its functions include:
 
-- connect & reconnect to xero
-- storing Xero token in a .json file
-- refresh Xero access token on expiry
+ - connect & reconnect to Xero
+ - securely store the Xero token on disk
+ - refresh Xero access token on expiry
 - read organisation information from /organisation endpoint
 - read contacts information from /contacts endpoint
 - create a new contact in Xero
@@ -128,15 +128,7 @@ Start your Testing.
 There are three controllers in this MVC app:
 
 **HomeController**
-- checks if a `token.dat` file exists via the `TokenService`, and
-- passes a boolean firstTimeConnection to view to control the display of buttons. 
 
-**AuthorizationController**
-- reads XeroConfiguration &  make httpClientFactory available via dependency injection
-- on /Authorization/, redirects user to Xero OAuth for authentication & authorization
-- receives callback on /Authorization/Callback request Xero token
-- get connected tenants (organisations)
-- stores the token using `TokenService` which encrypts the data to `token.dat`.
 
 **OrganisationInfoController**
 - gets or refreshes stored token
@@ -152,7 +144,7 @@ There are three controllers in this MVC app:
 
 All controllers derive from **BaseXeroOAuth2Controller**, which exposes `GetValidXeroTokenAsync`. This method automatically refreshes the access token when it is close to expiring, persists the refreshed token using `TokenService`, and clears the stored token if the refresh fails.
 
-Xero tokens are stored encrypted in `token.dat` at the root of the project. The `TokenService` handles encryption and decryption using ASP.NET Core data protection.
+
 
 ## License
 

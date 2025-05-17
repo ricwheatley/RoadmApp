@@ -15,3 +15,9 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore --configuration Release
+      - name: Run backend tests
+        run: dotnet test --no-build --configuration Release
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Run frontend tests
+        run: npm test --if-present

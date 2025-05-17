@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroNetStandardApp", "XeroNetStandardApp\XeroNetStandardApp.csproj", "{EC11CBCF-95A9-42AD-9C77-824911A94C68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroNetStandardApp.Tests", "XeroNetStandardApp.Tests\XeroNetStandardApp.Tests.csproj", "{858C929E-2474-4D80-91BD-6459FFF3542E}"
+EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -29,6 +31,18 @@ Global
 		{EC11CBCF-95A9-42AD-9C77-824911A94C68}.Release|x64.ActiveCfg = Release|Any CPU
 		{EC11CBCF-95A9-42AD-9C77-824911A94C68}.Release|x64.Build.0 = Release|Any CPU
 		{EC11CBCF-95A9-42AD-9C77-824911A94C68}.Release|x86.ActiveCfg = Release|Any CPU
-		{EC11CBCF-95A9-42AD-9C77-824911A94C68}.Release|x86.Build.0 = Release|Any CPU
-	EndGlobalSection
+               {EC11CBCF-95A9-42AD-9C77-824911A94C68}.Release|x86.Build.0 = Release|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Debug|x64.ActiveCfg = Debug|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Debug|x64.Build.0 = Debug|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Debug|x86.ActiveCfg = Debug|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Debug|x86.Build.0 = Debug|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Release|Any CPU.Build.0 = Release|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Release|x64.ActiveCfg = Release|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Release|x64.Build.0 = Release|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Release|x86.ActiveCfg = Release|Any CPU
+                {858C929E-2474-4D80-91BD-6459FFF3542E}.Release|x86.Build.0 = Release|Any CPU
+        EndGlobalSection
 EndGlobal

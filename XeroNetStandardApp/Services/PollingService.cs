@@ -27,7 +27,7 @@ namespace XeroNetStandardApp.Services
             if (tok == null || string.IsNullOrEmpty(tok.AccessToken))
                 throw new InvalidOperationException("No valid Xero token on file.");
 
-            await _ingestSvc.RunOnceAsync(tok.AccessToken, tenantId, endpointKey);
+            await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
 
             _log.LogInformation("Polled {Endpoint} for tenant {Tenant}", endpointKey, tenantId);
         }

@@ -1,15 +1,23 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using XeroNetStandardApp.IO;
+using XeroNetStandardApp.Services;
 using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly TokenService _tokenService;
+
+        public HomeController(TokenService tokenService)
+        {
+            _tokenService = tokenService;
+        }
+
         public IActionResult Index()
         {
-            var isConnected = LocalStorageTokenIO.Instance.TokenExists();
+            var isConnected = _tokenService.RetrieveToken() != null;
             ViewBag.IsConnected = isConnected;
             return View(isConnected);
         }

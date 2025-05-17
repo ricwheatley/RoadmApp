@@ -1,32 +1,42 @@
 ﻿@model dynamic
 
+@model XeroNetStandardApp.Models.HomeIndexViewModel
+
 @{
     ViewData["Title"] = "Home Page";
 }
 
 <div>
-    @if (Model == false) {
-
-    } else {
-        <h5>API Sets</h5>
-        <p style="color: grey"> You are connected to your Xero organisation. Try the following operations:</p>
-        
-        <h6> Accounting APIs: </h6>
-
-        <section style="margin-left: 10px">
-            <p><button onclick="location.href='@Url.Action("Index", "OrganisationInfo")'">Get Organisation Information</button></p>
-
-        </section>
-
-
-        <h6> Actions: </h6>
-
-        <section style="margin-left: 10px">
-
-            <p><button onclick="location.href='@Url.Action("Index", "IdentityInfo")'">Manual Data Load</button></p>
-        
-        </section>
-
+    @if (!Model.IsConnected)
+    {
+        <p>No Xero organisation connected.</p>
+        <p>
+            <button onclick="location.href='@Url.Action("Index", "Authorization")'">
+                Connect to Xero
+            </button>
+        </p>
     }
+    else
+    {
+        <h5>Your Xero Organisations</h5>
+        @if (Model.Tenants.Count == 0)
+        {
+            <p>No organisations connected.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <li>@tenant.OrgName (@tenant.TenantId)</li>
+                }
+            </ul>
+        }
 
+        <section style="margin-left: 10px">
+            <p>
+                <button onclick="location.href='@Url.Action("Index", "IdentityInfo")'">Manual Data Load</button>
+            </p>
+        </section>
+    }
 </div>

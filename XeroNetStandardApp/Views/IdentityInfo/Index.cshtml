@@ -15,7 +15,22 @@
                 @foreach (var tenant in Model.Tenants)
                 {
                     <th class="text-center">
-                        @tenant.OrgName<br />
+                        @tenant.OrgName
+                    </th>
+                }
+            </tr>
+            <tr>
+                <th>
+                    <button type="submit"
+                            name="tenantId"
+                            value="ALL"
+                            class="btn btn-success">
+                        Run&nbsp;All&nbsp;Organisations
+                    </button>
+                </th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">
                         <button type="submit"
                                 name="tenantId"
                                 value="@tenant.TenantId"
@@ -60,12 +75,6 @@
         </tbody>
     </table>
 
-    <button type="submit"
-            name="tenantId"
-            value="ALL"
-            class="btn btn-success">
-        Run&nbsp;All&nbsp;Organisations
-    </button>
 </form>
 
 @section Scripts {

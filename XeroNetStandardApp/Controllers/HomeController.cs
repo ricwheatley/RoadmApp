@@ -17,9 +17,25 @@ namespace XeroNetStandardApp.Controllers
 
         public IActionResult Index()
         {
-            var isConnected = _tokenService.RetrieveToken() != null;
-            ViewBag.IsConnected = isConnected;
-            return View(isConnected);
+            var token = _tokenService.RetrieveToken();
+            var model = new HomeIndexViewModel
+            {
+                IsConnected = token != null
+            };
+
+            if (token?.Tenants != null)
+            {
+                foreach (var t in token.Tenants)
+                {
+                    model.Tenants.Add(new OrgTenant
+                    {
+                        TenantId = t.TenantId.ToString(),
+                        OrgName = t.TenantName
+                    });
+                }
+            }
+
+            return View(model);
         }
 
         public IActionResult Privacy()

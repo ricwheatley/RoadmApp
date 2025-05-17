@@ -29,7 +29,9 @@ namespace XeroNetStandardApp.Controllers
         protected readonly IOptions<XeroConfiguration> _xeroConfig;
         protected readonly TokenService _tokenService;
         protected readonly ILogger<BaseXeroOAuth2Controller> _logger;
-        protected readonly ITokenIO _legacyTokenIO; // only while you still reference LocalStorageTokenIO elsewhere
+        // Temporary bridge for older helpers that still use LocalStorageTokenIO.
+        // Once everything has migrated to TokenService this can be removed.
+        protected readonly ITokenIO _legacyTokenIO;
 
         #region ctor
 
@@ -57,6 +59,23 @@ namespace XeroNetStandardApp.Controllers
             get
             {
                 var id = _legacyTokenIO.GetTenantId();
+
+                // If not present, fall back to the token stored by TokenService
+                // and grab the first tenant ID available.
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    var token = _tokenService.RetrieveToken();
+                    id = token?.Tenants?.Count > 0
+                         ? token.Tenants[0].TenantId.ToString()
+                         : null;
+
+                    if (!string.IsNullOrWhiteSpace(id))
+                    {
+                        // Persist for the legacy components still expecting this.
+                        _legacyTokenIO.StoreTenantId(id);
+                    }
+                }
+
                 if (string.IsNullOrWhiteSpace(id))
                 {
                     Response.Redirect("/Authorization");

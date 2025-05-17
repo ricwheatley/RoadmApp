@@ -104,10 +104,7 @@ namespace XeroNetStandardApp.IO
         public void StoreTenantId(string tenantId)
         {
             var serializedTenantId = JsonSerializer.Serialize(new TenantIdModel { CurrentTenantId = tenantId });
-            if (File.Exists(TenantIdFilePath))
-            {
-                File.WriteAllText(TenantIdFilePath, serializedTenantId);
-            }
+            File.WriteAllText(TenantIdFilePath, serializedTenantId);
         }
 
         /// <summary>

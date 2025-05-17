@@ -12,4 +12,10 @@ describe('HomePage', () => {
     expect(screen.getByText('Tenant A')).toBeInTheDocument();
     expect(screen.getByText('Tenant B')).toBeInTheDocument();
   });
+
+  test('shows message when no tenants provided', () => {
+    render(<HomePage tenants={[]} />);
+    expect(screen.getByRole('heading', { name: /authorised tenants/i })).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
 });

@@ -1,23 +1,50 @@
 name: CI
+
 on:
   push:
+    branches: [ "**" ]          # every branch push
   pull_request:
+    branches: [ "**" ]          # every PR
+
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      # -----------------------------------------------------------------------
+      # 1.  Check out the code
+      # -----------------------------------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # -----------------------------------------------------------------------
+      # 2.  JavaScript / React tests
+      # -----------------------------------------------------------------------
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20          # match your local version
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci                 # uses package-lock.json
+
+      - name: Run Jest suite
+        run: npm test --silent
+
+      # -----------------------------------------------------------------------
+      # 3.  .NET build & tests
+      # -----------------------------------------------------------------------
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
-      - name: Restore dependencies
+          dotnet-version: "8.0.x"
+
+      - name: Restore .NET dependencies
         run: dotnet restore
-      - name: Build
+
+      - name: Build .NET solution
         run: dotnet build --no-restore --configuration Release
-      - name: Run backend tests
+
+      - name: Run .NET tests
         run: dotnet test --no-build --configuration Release
-      - name: Install Node dependencies
-        run: npm ci
-      - name: Run frontend tests
-        run: npm test --if-present

@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Xero.NetStandard.OAuth2.Token;
-using XeroNetStandardApp.IO;
 using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Services
@@ -24,18 +23,21 @@ namespace XeroNetStandardApp.Services
         private readonly IHttpClientFactory _factory;
         private readonly ILogger<XeroRawIngestService> _log;
         private readonly IConfiguration _cfg;
+        private readonly TokenService _tokenService;
         private static readonly TimeSpan _expiryBuffer = TimeSpan.FromMinutes(2);
 
         public XeroRawIngestService(
             IConfiguration cfg,
             IOptions<XeroSyncOptions> opt,
             IHttpClientFactory factory,
-            ILogger<XeroRawIngestService> log)
+            ILogger<XeroRawIngestService> log,
+            TokenService tokenService)
         {
             _cfg = cfg;
             _opt = opt.Value;
             _factory = factory;
             _log = log;
+            _tokenService = tokenService;
             _connString = cfg.GetConnectionString("Postgres")
                           ?? throw new InvalidOperationException("Postgres conn string missing");
         }
@@ -45,11 +47,11 @@ namespace XeroNetStandardApp.Services
         // ─────────────────────────────────────────────
 
         /// Run *all* endpoints (unchanged).
-        public Task<int> RunOnceAsync(string accessToken, string tenantId)
-            => RunCoreAsync(accessToken, tenantId, _opt.Endpoints);
+        public Task<int> RunOnceAsync(string tenantId)
+            => RunCoreAsync(tenantId, _opt.Endpoints);
 
         /// Run a *single* endpoint (NEW).
-        public Task<int> RunOnceAsync(string accessToken, string tenantId, string endpointKey)
+        public Task<int> RunOnceAsync(string tenantId, string endpointKey)
         {
             var ep = _opt.Endpoints
                          .Where(e => string.Equals(
@@ -61,23 +63,21 @@ namespace XeroNetStandardApp.Services
             if (ep.Length == 0)
             {
                 _log.LogWarning("Unknown endpoint key {Key} – falling back to full ingest", endpointKey);
-                return RunOnceAsync(accessToken, tenantId);
+                return RunOnceAsync(tenantId);
             }
 
-            return RunCoreAsync(accessToken, tenantId, ep);
+            return RunCoreAsync(tenantId, ep);
         }
 
         // ─────────────────────────────────────────────
         //  CORE PIPELINE (shared by both entry-points)
         // ─────────────────────────────────────────────
         private async Task<int> RunCoreAsync(
-            string accessToken,
             string tenantId,
             IEnumerable<EndpointConfig> endpointsToRun)
         {
-            var store = LocalStorageTokenIO.Instance;
-            var token = store.GetToken()
-                      ?? throw new InvalidOperationException("No saved Xero token on disk.");
+            var token = _tokenService.RetrieveToken()
+                        ?? throw new InvalidOperationException("No saved Xero token on disk.");
 
             // refresh ONCE if we’re inside the 2-minute buffer
             if (TokenNeedsRefresh(token))
@@ -153,7 +153,7 @@ namespace XeroNetStandardApp.Services
             refreshed.ExpiresAtUtc = DateTime.UtcNow.AddSeconds(expiresIn);
 
             // NB: Xero rotates the refresh-token too
-            LocalStorageTokenIO.Instance.StoreToken(refreshed);
+            _tokenService.StoreToken(refreshed);
 
             _log.LogInformation("Token refreshed, now expires {Expiry:u}", refreshed.ExpiresAtUtc);
             return refreshed;

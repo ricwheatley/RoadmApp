@@ -5,11 +5,11 @@ This is a starter app build with .NET Core 3.1 MVC to demonstrate Xero OAuth 2.0
 
 __IMPORTANT!__ This application is for demo only. We recommend setting up a secure token storage for your production usage.
 
-Its functions include:
+- Its functions include:
 
-- connect & reconnect to xero
-- storing Xero token in a .json file
-- refresh Xero access token on expiry
+ - connect & reconnect to Xero
+ - securely store the Xero token on disk
+ - refresh Xero access token on expiry
 - read organisation information from /organisation endpoint
 - read contacts information from /contacts endpoint
 - create a new contact in Xero
@@ -128,15 +128,15 @@ Start your Testing.
 There are three controllers in this MVC app:
 
 **HomeController**
-- checks if there is a xerotoken.json, and 
-- passes a boolean firstTimeConnection to view to control the display of buttons. 
+- checks if there is an encrypted Xero token stored, and
+- passes a boolean firstTimeConnection to view to control the display of buttons.
 
 **AuthorizationController**
-- reads XeroConfiguration &  make httpClientFactory available via dependency injection
-- on /Authorization/, redirects user to Xero OAuth for authentication & authorization
-- receives callback on /Authorization/Callback request Xero token
-- get connected tenants (organisations) 
-- store token via a static method TokenUtilities.StoreToken(xeroToken);
+- reads XeroConfiguration & makes HttpClientFactory available via dependency injection
+- on /Authorization/, redirects the user to Xero OAuth for authentication & authorization
+- receives callback on /Authorization/Callback to request a Xero token
+- get connected tenants (organisations)
+- store the token using the built-in TokenService
 
 **OrganisationInfoController**
 - gets or refreshes stored token
@@ -150,7 +150,6 @@ There are three controllers in this MVC app:
 - static view Create.cshtml creates a webform and POST contact info to Create() action, and
 - makes an create operation to contacts endpoint 
 
-Xero token is stored in a JSON file in the root of the project "./xerotoken.json". The app serialise and deserialise with the static class functions in /Utilities/TokenUtilities.cs. 
 
 ## License
 

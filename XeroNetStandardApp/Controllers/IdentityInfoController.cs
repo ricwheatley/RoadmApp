@@ -78,7 +78,8 @@ namespace XeroNetStandardApp.Controllers
                     new() { Key = "repeatinginvoices",   DisplayName = "Repeating Invoices" },
                     new() { Key = "taxrates",            DisplayName = "Tax Rates" },
                     new() { Key = "trackingcategories",  DisplayName = "Tracking Categories" },
-                    new() { Key = "users",               DisplayName = "Users" }
+                    new() { Key = "users",               DisplayName = "Users" },
+                    new() { Key = "assets",              DisplayName = "Assets" }
                 }
             };
 

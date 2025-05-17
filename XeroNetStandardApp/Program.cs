@@ -16,6 +16,7 @@ builder.Services.Configure<XeroSyncOptions>(builder.Configuration.GetSection("Xe
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IXeroRawIngestService, XeroRawIngestService>();
+builder.Services.AddTransient<IXeroAssetsIngestService, XeroAssetsIngestService>();
 builder.Services.AddTransient<TokenService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<IPollingService, PollingService>();

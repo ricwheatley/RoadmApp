@@ -9,15 +9,18 @@ namespace XeroNetStandardApp.Services
     {
         private readonly TokenService _tokenService;
         private readonly IXeroRawIngestService _ingestSvc;
+        private readonly IXeroAssetsIngestService _assetsSvc;
         private readonly ILogger<PollingService> _log;
 
         public PollingService(
             TokenService tokenService,
             IXeroRawIngestService ingestSvc,
+            IXeroAssetsIngestService assetsSvc,
             ILogger<PollingService> log)
         {
             _tokenService = tokenService;
             _ingestSvc = ingestSvc;
+            _assetsSvc = assetsSvc;
             _log = log;
         }
 
@@ -27,7 +30,14 @@ namespace XeroNetStandardApp.Services
             if (tok == null || string.IsNullOrEmpty(tok.AccessToken))
                 throw new InvalidOperationException("No valid Xero token on file.");
 
-            await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
+            if (endpointKey.Equals("assets", StringComparison.OrdinalIgnoreCase))
+            {
+                await _assetsSvc.RunOnceAsync(tenantId, endpointKey);
+            }
+            else
+            {
+                await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
+            }
 
             _log.LogInformation("Polled {Endpoint} for tenant {Tenant}", endpointKey, tenantId);
         }

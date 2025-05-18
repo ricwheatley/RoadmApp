@@ -85,7 +85,6 @@ namespace XeroNetStandardApp.Services
                 token = await RefreshAsync(token);
 
             var http = _factory.CreateClient(nameof(XeroRawIngestService));
-            http.BaseAddress = new Uri("https://api.xero.com/api.xro/2.0/");
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
             http.DefaultRequestHeaders.Add("xero-tenant-id", tenantId);
 
@@ -166,7 +165,8 @@ namespace XeroNetStandardApp.Services
                     http.DefaultRequestHeaders.IfModifiedSince = since;
 
                 var path = endpoint.Name.Replace(" ", string.Empty);
-                var url = endpoint.SupportsPagination ? $"{path}?page=1" : path;
+                var baseUrl = endpoint.ApiUrl.TrimEnd('/') + "/";
+                var url = endpoint.SupportsPagination ? $"{baseUrl}{path}?page=1" : $"{baseUrl}{path}";
                 var resp = await http.GetAsync(url);
                 var body = await resp.Content.ReadAsStringAsync();
 
@@ -188,7 +188,7 @@ namespace XeroNetStandardApp.Services
                 for (var page = 2; page <= totalPages; page++)
                 {
                     await Task.Delay(1100); // stay inside Xero’s 60‑calls‑per‑minute limit
-                    resp = await http.GetAsync($"{path}?page={page}");
+                    resp = await http.GetAsync($"{baseUrl}{path}?page={page}");
                     body = await resp.Content.ReadAsStringAsync();
 
                     if (!resp.IsSuccessStatusCode)

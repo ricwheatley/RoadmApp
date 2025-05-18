@@ -11,7 +11,9 @@ public sealed class XeroSyncOptions
 public sealed class EndpointConfig
 {
     public string Name { get; set; } = string.Empty;
+    public string ApiUrl { get; set; } = string.Empty;
     public string? ResponseKey { get; set; }
     public bool SupportsPagination { get; set; } = true;
     public bool SupportsModifiedSince { get; set; } = true;
+    public string? Scopes { get; set; }
 }

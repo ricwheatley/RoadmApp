@@ -24,12 +24,36 @@
         }
         else
         {
-            <ul>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <li>@tenant.OrgName (@tenant.TenantId)</li>
-                }
-            </ul>
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Organisation</th>
+                        <th>Tenant Id</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tenant in Model.Tenants)
+                    {
+                        <tr>
+                            <td>@tenant.OrgName</td>
+                            <td>@tenant.TenantId</td>
+                            <td>
+                                <a class="btn btn-primary btn-sm"
+                                   asp-controller="Authorization"
+                                   asp-action="Index">Reauthorise</a>
+                            </td>
+                            <td>
+                                <a class="btn btn-danger btn-sm"
+                                   asp-controller="Authorization"
+                                   asp-action="Disconnect"
+                                   asp-route-tenantId="@tenant.TenantId">Disconnect</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         }
 
         <section style="margin-left: 10px">

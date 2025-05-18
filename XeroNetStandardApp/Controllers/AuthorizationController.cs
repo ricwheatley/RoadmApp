@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
+using System.Linq;
 using Xero.NetStandard.OAuth2.Client;
 using Xero.NetStandard.OAuth2.Config;
 using Xero.NetStandard.OAuth2.Token;
@@ -52,15 +53,20 @@ namespace XeroNetStandardApp.Controllers
         }
 
         // GET /Authorization/Disconnect
-        public async Task<IActionResult> Disconnect()
+        public async Task<IActionResult> Disconnect(string tenantId)
         {
             var token = await GetValidXeroTokenAsync();
             if (token == null || token.Tenants?.Count == 0)
                 return BadRequest("No connected Xero organisation to disconnect.");
 
-            await _client.DeleteConnectionAsync(token, token.Tenants[0]);
-            _tokenService.DestroyToken();
-            _log.LogInformation("Xero connection revoked and local token destroyed.");
+            var tenant = token.Tenants.FirstOrDefault(t => t.TenantId.ToString() == tenantId);
+            if (tenant == null)
+                return BadRequest("Invalid tenant id.");
+
+            await _client.DeleteConnectionAsync(token, tenant);
+            token.Tenants.Remove(tenant);
+            _tokenService.StoreToken(token);
+            _log.LogInformation("Xero connection revoked for {TenantId}.", tenantId);
 
             return RedirectToAction("Index", "Home");
         }

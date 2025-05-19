@@ -76,12 +76,19 @@
         document.querySelectorAll('.last-polled').forEach(function (cell) {
             var tid = cell.getAttribute('data-tenant');
             var val = localStorage.getItem('pollLast_' + tid);
-            if (val) {
-                try {
-                    var d = new Date(val);
-                    cell.textContent = d.toLocaleString();
-                } catch (e) {}
+
+            if (!val) {
+                cell.textContent = 'Not updated yet';
+                return;
             }
+
+            var d = new Date(val);
+            if (isNaN(d.getTime())) {
+                cell.textContent = 'Not updated yet';
+                return;
+            }
+
+            cell.textContent = d.toLocaleString();
         });
     </script>
 }

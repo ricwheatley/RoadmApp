@@ -18,6 +18,14 @@
     else
     {
         <h5>Your Xero Organisations</h5>
+        <div class="mb-3">
+            <a class="btn btn-secondary btn-sm me-2" asp-controller="Authorization" asp-action="Index">
+                Add Organisation
+            </a>
+            <a class="btn btn-secondary btn-sm" asp-controller="IdentityInfo" asp-action="Index">
+                Manual Data Load
+            </a>
+        </div>
         @if (Model.Tenants.Count == 0)
         {
             <p>No organisations connected.</p>
@@ -56,9 +64,4 @@
             </table>
         }
 
-        <section style="margin-left: 10px">
-            <p>
-                <button onclick="location.href='@Url.Action("Index", "IdentityInfo")'">Manual Data Load</button>
-            </p>
-        </section>
     }

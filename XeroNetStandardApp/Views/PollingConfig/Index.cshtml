@@ -1,9 +1,24 @@
 @model XeroNetStandardApp.Models.PollingConfigViewModel
 @{
     ViewData["Title"] = "Polling Configuration";
+
+    var tenantJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Tenants.Select(t => new { t.TenantId, t.OrgName })
+    );
 }
 
 <h2>Polling Configuration</h2>
+
+<!-- view-specific CSS -->
+<style>
+    /* shared width + centred horizontally */
+    .sched-control {
+        width: 8rem; /* adjust as needed */
+        display: block; /* makes margin centring reliable */
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
 
 <form asp-action="SaveSchedule" method="post">
     <table class="table table-sm table-striped">
@@ -23,7 +38,7 @@
                         <button type="submit"
                                 name="tenantId"
                                 value="@tenant.TenantId"
-                                class="btn btn-primary btn-sm">
+                                class="btn btn-primary btn-sm sched-control">
                             Save&nbsp;Schedule
                         </button>
                     </th>
@@ -34,7 +49,9 @@
                 @foreach (var tenant in Model.Tenants)
                 {
                     <th class="text-center">
-                        <input type="checkbox" class="js-column-toggle" data-tenant="@tenant.TenantId" />
+                        <input type="checkbox"
+                               class="js-column-toggle"
+                               data-tenant="@tenant.TenantId" />
                         <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
                     </th>
                 }
@@ -44,7 +61,9 @@
                 @foreach (var tenant in Model.Tenants)
                 {
                     <th class="text-center">
-                        <select class="form-select form-select-sm" name="freq[@tenant.TenantId]">
+                        <select class="form-select form-select-sm freq-select sched-control"
+                                data-tenant="@tenant.TenantId"
+                                name="freq[@tenant.TenantId]">
                             <option>Off</option>
                             <option>Daily</option>
                             <option>Weekly</option>
@@ -57,7 +76,10 @@
                 @foreach (var tenant in Model.Tenants)
                 {
                     <th class="text-center">
-                        <input type="time" class="form-control form-control-sm" name="time[@tenant.TenantId]" />
+                        <input type="time"
+                               class="form-control form-control-sm time-input sched-control"
+                               data-tenant="@tenant.TenantId"
+                               name="time[@tenant.TenantId]" />
                     </th>
                 }
             </tr>
@@ -71,9 +93,10 @@
                     {
                         <td class="text-center">
                             <input type="checkbox"
-                                   name="selected[@tenant.TenantId]"
+                                   class="ep-checkbox"
+                                   data-tenant="@tenant.TenantId"
                                    value="@ep.Key"
-                                   class="ep-checkbox tenant-@tenant.TenantId" />
+                                   name="selected[@tenant.TenantId]" />
                         </td>
                     }
                 </tr>
@@ -82,49 +105,81 @@
     </table>
 </form>
 
+<script id="tenant-data" type="application/json">
+    @Html.Raw(tenantJson)
+</script>
+
 @section Scripts {
-    <script>
-        // toggle an entire tenant column
-        document.querySelectorAll('.js-column-toggle').forEach(function (toggle) {
-            toggle.addEventListener('change', function () {
-                const tid = this.dataset.tenant;
-                document.querySelectorAll('.tenant-' + tid)
-                    .forEach(cb => cb.checked = toggle.checked);
-            });
-        });
+    <script type="text/javascript">
+        // ts-nocheck
+        (() => {
+            const qsa = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
-        // load saved schedules from localStorage
-        @foreach (var tenant in Model.Tenants)
-        {
-            <text>
-            (function() {
-                var data = localStorage.getItem('pollConf_@tenant.TenantId');
-                if (!data) return;
+            /* column toggle */
+            qsa('.js-column-toggle').forEach(toggle => {
+                toggle.addEventListener('change', () => {
+                    const tid = toggle.dataset.tenant;
+                    qsa(`.ep-checkbox[data-tenant="${tid}"]`)
+                        .forEach(cb => cb.checked = toggle.checked);
+                });
+            });
+
+            /* hydrate UI */
+            const tenants = JSON.parse(
+                document.getElementById('tenant-data').textContent
+            );
+
+            tenants.forEach(t => {
+                const raw = localStorage.getItem(`pollConf_${t.TenantId}`);
+                if (!raw) return;
+
                 try {
-                    var obj = JSON.parse(data);
-                    if (obj.selected) obj.selected.forEach(function(key){
-                        var cb = document.querySelector('input.tenant-@tenant.TenantId[value="' + key + '"]');
-                        if (cb) cb.checked = true;
-                    });
-                    var sel = document.querySelector('select[name="freq[@tenant.TenantId]"]');
-                    if (sel && obj.freq) sel.value = obj.freq;
-                    var ti = document.querySelector('input[name="time[@tenant.TenantId]"]');
-                    if (ti && obj.time) ti.value = obj.time;
-                } catch(e) {}
-            })();
-            </text>
-        }
+                    const cfg = JSON.parse(raw);
 
-        // save schedule to localStorage when button pressed
-        document.querySelectorAll('button[name="tenantId"]').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var tid = this.value;
-                var selected = Array.from(document.querySelectorAll('.tenant-' + tid + ':checked')).map(cb => cb.value);
-                var freq = document.querySelector('select[name="freq[' + tid + ']" ]').value;
-                var time = document.querySelector('input[name="time[' + tid + ']" ]').value;
-                localStorage.setItem('pollConf_' + tid, JSON.stringify({selected: selected, freq: freq, time: time}));
-                localStorage.setItem('pollLast_' + tid, new Date().toISOString());
+                    (cfg.selected || []).forEach(k => {
+                        const box = document.querySelector(
+                            `.ep-checkbox[data-tenant="${t.TenantId}"][value="${k}"]`
+                        );
+                        if (box) box.checked = true;
+                    });
+
+                    const freqSel = document.querySelector(
+                        `.freq-select[data-tenant="${t.TenantId}"]`
+                    );
+                    if (freqSel && cfg.freq) freqSel.value = cfg.freq;
+
+                    const timeInp = document.querySelector(
+                        `.time-input[data-tenant="${t.TenantId}"]`
+                    );
+                    if (timeInp && cfg.time) timeInp.value = cfg.time;
+
+                } catch { }
             });
-        });
+
+            /* persist schedule */
+            qsa('button[name="tenantId"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tid = btn.value;
+
+                    const freqSel = document.querySelector(
+                        `.freq-select[data-tenant="${tid}"]`
+                    );
+                    const timeInp = document.querySelector(
+                        `.time-input[data-tenant="${tid}"]`
+                    );
+
+                    const cfg = {
+                        selected: qsa(`.ep-checkbox[data-tenant="${tid}"]:checked`)
+                            .map(cb => cb.value),
+                        freq: freqSel ? freqSel.value : '',
+                        time: timeInp ? timeInp.value : ''
+                    };
+
+                    localStorage.setItem(`pollConf_${tid}`, JSON.stringify(cfg));
+                    localStorage.setItem(`pollLast_${tid}`, new Date().toISOString());
+                });
+            });
+
+        })();
     </script>
 }

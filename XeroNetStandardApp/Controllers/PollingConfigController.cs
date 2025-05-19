@@ -23,11 +23,36 @@ public class PollingConfigController : Controller
 
         var endpoints = new List<EndpointOption>
         {
-            new() { Key = "contacts",   DisplayName = "Accounting – Contacts" },
-            new() { Key = "invoices",   DisplayName = "Accounting – Invoices" },
-            new() { Key = "payments",   DisplayName = "Accounting – Payments" },
-            new() { Key = "assets",     DisplayName = "Assets – Assets" },
-            new() { Key = "assettypes", DisplayName = "Assets – Asset Types" }
+            new() { Key = "accounts",            DisplayName = "Accounts" },
+            new() { Key = "banktransfers",       DisplayName = "Bank Transfers" },
+            new() { Key = "batchpayments",       DisplayName = "Batch Payments" },
+            new() { Key = "brandingthemes",      DisplayName = "Branding Themes" },
+            new() { Key = "budgets",             DisplayName = "Budgets" },
+            new() { Key = "contactgroups",       DisplayName = "Contact Groups" },
+            new() { Key = "contacts",            DisplayName = "Contacts" },
+            new() { Key = "creditnotes",         DisplayName = "Credit Notes" },
+            new() { Key = "currencies",          DisplayName = "Currencies" },
+            new() { Key = "employees",           DisplayName = "Employees" },
+            new() { Key = "invoicereminders",    DisplayName = "Invoice Reminders" },
+            new() { Key = "invoices",            DisplayName = "Invoices" },
+            new() { Key = "items",               DisplayName = "Items" },
+            new() { Key = "journals",            DisplayName = "Journals" },
+            new() { Key = "linkedtransactions",  DisplayName = "Linked Transactions" },
+            new() { Key = "manualjournals",      DisplayName = "Manual Journals" },
+            new() { Key = "organisation",        DisplayName = "Organisation" },
+            new() { Key = "overpayments",        DisplayName = "Overpayments" },
+            new() { Key = "payments",            DisplayName = "Payments" },
+            new() { Key = "paymentservices",     DisplayName = "Payment Services" },
+            new() { Key = "prepayments",         DisplayName = "Prepayments" },
+            new() { Key = "purchaseorders",      DisplayName = "Purchase Orders" },
+            new() { Key = "quotes",              DisplayName = "Quotes" },
+            new() { Key = "repeatinginvoices",   DisplayName = "Repeating Invoices" },
+            new() { Key = "taxrates",            DisplayName = "Tax Rates" },
+            new() { Key = "trackingcategories",  DisplayName = "Tracking Categories" },
+            new() { Key = "users",               DisplayName = "Users" },
+            new() { Key = "assets",              DisplayName = "Assets" },
+            new() { Key = "assettypes",          DisplayName = "Asset Types" },
+            new() { Key = "settings",            DisplayName = "Asset Settings" }
         };
 
         var model = new PollingConfigViewModel

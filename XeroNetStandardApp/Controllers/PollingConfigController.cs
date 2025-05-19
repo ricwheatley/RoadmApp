@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using XeroNetStandardApp.Models;
@@ -20,6 +21,40 @@ public class PollingConfigController : Controller
         var token = _tokenService.RetrieveToken();
         if (token == null) return RedirectToAction("Index", "Authorization");
 
+        var endpoints = new List<EndpointOption>
+        {
+            new() { Key = "accounts",            DisplayName = "Accounts" },
+            new() { Key = "banktransfers",       DisplayName = "Bank Transfers" },
+            new() { Key = "batchpayments",       DisplayName = "Batch Payments" },
+            new() { Key = "brandingthemes",      DisplayName = "Branding Themes" },
+            new() { Key = "budgets",             DisplayName = "Budgets" },
+            new() { Key = "contactgroups",       DisplayName = "Contact Groups" },
+            new() { Key = "contacts",            DisplayName = "Contacts" },
+            new() { Key = "creditnotes",         DisplayName = "Credit Notes" },
+            new() { Key = "currencies",          DisplayName = "Currencies" },
+            new() { Key = "employees",           DisplayName = "Employees" },
+            new() { Key = "invoicereminders",    DisplayName = "Invoice Reminders" },
+            new() { Key = "invoices",            DisplayName = "Invoices" },
+            new() { Key = "items",               DisplayName = "Items" },
+            new() { Key = "journals",            DisplayName = "Journals" },
+            new() { Key = "linkedtransactions",  DisplayName = "Linked Transactions" },
+            new() { Key = "manualjournals",      DisplayName = "Manual Journals" },
+            new() { Key = "organisation",        DisplayName = "Organisation" },
+            new() { Key = "overpayments",        DisplayName = "Overpayments" },
+            new() { Key = "payments",            DisplayName = "Payments" },
+            new() { Key = "paymentservices",     DisplayName = "Payment Services" },
+            new() { Key = "prepayments",         DisplayName = "Prepayments" },
+            new() { Key = "purchaseorders",      DisplayName = "Purchase Orders" },
+            new() { Key = "quotes",              DisplayName = "Quotes" },
+            new() { Key = "repeatinginvoices",   DisplayName = "Repeating Invoices" },
+            new() { Key = "taxrates",            DisplayName = "Tax Rates" },
+            new() { Key = "trackingcategories",  DisplayName = "Tracking Categories" },
+            new() { Key = "users",               DisplayName = "Users" },
+            new() { Key = "assets",              DisplayName = "Assets" },
+            new() { Key = "assettypes",          DisplayName = "Asset Types" },
+            new() { Key = "settings",            DisplayName = "Asset Settings" }
+        };
+
         var model = new PollingConfigViewModel
         {
             Tenants = token.Tenants.Select(t => new OrgTenant
@@ -27,19 +62,23 @@ public class PollingConfigController : Controller
                 TenantId = t.TenantId.ToString(),
                 OrgName = t.TenantName
             }).ToList(),
-            AccountingEndpoints = new()
-            {
-                new EndpointOption { Key = "contacts", DisplayName = "Contacts" },
-                new EndpointOption { Key = "invoices", DisplayName = "Invoices" },
-                new EndpointOption { Key = "payments", DisplayName = "Payments" }
-            },
-            AssetsEndpoints = new()
-            {
-                new EndpointOption { Key = "assets", DisplayName = "Assets" },
-                new EndpointOption { Key = "assettypes", DisplayName = "Asset Types" }
-            }
+            Endpoints = endpoints
         };
 
         return View(model);
+    }
+
+    // POST /PollingConfig/SaveSchedule
+    [HttpPost]
+    public IActionResult SaveSchedule(
+        string tenantId,
+        [FromForm] Dictionary<string, string[]> selected,
+        [FromForm] Dictionary<string, string> freq,
+        [FromForm] Dictionary<string, string> time)
+    {
+        // TODO: Persist the schedule to a real data store.
+        // For now we simply acknowledge the request.
+        TempData["Message"] = $"Saved schedule for {tenantId}.";
+        return RedirectToAction("Index");
     }
 }

@@ -26,7 +26,7 @@
                 Manual Data Load
             </a>
             <a class="btn btn-secondary btn-sm" asp-controller="PollingConfig" asp-action="Index">
-                Scheduled Data Load
+                Polling Settings
             </a>
         </div>
         @if (Model.Tenants.Count == 0)
@@ -40,6 +40,7 @@
                     <tr>
                         <th>Organisation</th>
                         <th>Tenant Id</th>
+                        <th>Last Updated</th>
                         <th></th>
                         <th></th>
                     </tr>
@@ -50,6 +51,7 @@
                         <tr>
                             <td>@tenant.OrgName</td>
                             <td>@tenant.TenantId</td>
+                            <td class="last-polled" data-tenant="@tenant.TenantId">—</td>
                             <td>
                                 <a class="btn btn-primary btn-sm"
                                    asp-controller="Authorization"
@@ -68,3 +70,18 @@
         }
 
     }
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.last-polled').forEach(function (cell) {
+            var tid = cell.getAttribute('data-tenant');
+            var val = localStorage.getItem('pollLast_' + tid);
+            if (val) {
+                try {
+                    var d = new Date(val);
+                    cell.textContent = d.toLocaleString();
+                } catch (e) {}
+            }
+        });
+    </script>
+}

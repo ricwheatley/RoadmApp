@@ -21,15 +21,16 @@ namespace XeroNetStandardApp.Services
             _log = log;
         }
 
-        public async Task RunEndpointAsync(string tenantId, string endpointKey)
+        public async Task<int> RunEndpointAsync(string tenantId, string endpointKey)
         {
             XeroOAuth2Token? tok = _tokenService.RetrieveToken();
             if (tok == null || string.IsNullOrEmpty(tok.AccessToken))
                 throw new InvalidOperationException("No valid Xero token on file.");
 
-            await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
+            var rows = await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
 
             _log.LogInformation("Polled {Endpoint} for tenant {Tenant}", endpointKey, tenantId);
+            return rows;
         }
     }
 }

@@ -8,10 +8,10 @@ namespace XeroNetStandardApp.Tests.Helpers
     {
         public List<(string Tenant, string Endpoint)> Calls { get; } = new();
 
-        public Task RunEndpointAsync(string tenantId, string endpointKey)
+        public Task<int> RunEndpointAsync(string tenantId, string endpointKey)
         {
             Calls.Add((tenantId, endpointKey));
-            return Task.CompletedTask;
+            return Task.FromResult(0);
         }
     }
 }

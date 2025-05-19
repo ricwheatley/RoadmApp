@@ -100,23 +100,35 @@ namespace XeroNetStandardApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Run requested polling
+            // Run requested polling and capture number of rows inserted
+            var inserted = new Dictionary<string, int>();
+
             if (tenantId == "ALL")
             {
                 foreach (var (tId, endpoints) in selected)
+                {
+                    var count = 0;
                     foreach (var ep in endpoints)
-                        await _pollingService.RunEndpointAsync(tId, ep);
+                        count += await _pollingService.RunEndpointAsync(tId, ep);
+                    inserted[tId] = count;
+                }
             }
             else if (selected.TryGetValue(tenantId, out var endpointsForTenant))
             {
+                var count = 0;
                 foreach (var ep in endpointsForTenant)
-                    await _pollingService.RunEndpointAsync(tenantId, ep);
+                    count += await _pollingService.RunEndpointAsync(tenantId, ep);
+                inserted[tenantId] = count;
             }
             else
             {
                 TempData["Message"] = "No endpoints selected.";
                 return RedirectToAction("Index");
             }
+
+            foreach (var kv in inserted)
+                if (kv.Value > 0)
+                    TempData[$"PollLast_{kv.Key}"] = DateTime.UtcNow.ToString("o");
 
             TempData["Message"] =
                 tenantId == "ALL"

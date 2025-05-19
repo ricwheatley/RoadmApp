@@ -22,8 +22,11 @@
             <a class="btn btn-secondary btn-sm me-2" asp-controller="Authorization" asp-action="Index">
                 Add Organisation
             </a>
-            <a class="btn btn-secondary btn-sm" asp-controller="IdentityInfo" asp-action="Index">
+            <a class="btn btn-secondary btn-sm me-2" asp-controller="IdentityInfo" asp-action="Index">
                 Manual Data Load
+            </a>
+            <a class="btn btn-secondary btn-sm" asp-controller="PollingConfig" asp-action="Index">
+                Polling Settings
             </a>
         </div>
         @if (Model.Tenants.Count == 0)

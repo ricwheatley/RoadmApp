@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function LastUpdate({ timestamp }) {
   if (!timestamp) {
     return <span>Not updated yet</span>;

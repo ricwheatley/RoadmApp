@@ -79,7 +79,9 @@ namespace XeroNetStandardApp.Controllers
                     new() { Key = "taxrates",            DisplayName = "Tax Rates" },
                     new() { Key = "trackingcategories",  DisplayName = "Tracking Categories" },
                     new() { Key = "users",               DisplayName = "Users" },
-                    new() { Key = "assets",              DisplayName = "Assets" }
+                    new() { Key = "assets",              DisplayName = "Assets" },
+                    new() { Key = "assettypes",          DisplayName = "Asset Types" },
+                    new() { Key = "settings",            DisplayName = "Asset Settings" }
                 }
             };
 

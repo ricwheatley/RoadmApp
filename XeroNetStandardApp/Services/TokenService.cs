@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
-using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.IO;
 using Xero.NetStandard.OAuth2.Token;
 
 namespace XeroNetStandardApp.Services
@@ -29,8 +31,12 @@ namespace XeroNetStandardApp.Services
 
             var encryptedToken = File.ReadAllText(_tokenFilePath);
             var decryptedToken = _protector.Unprotect(encryptedToken);
-            return JsonConvert.DeserializeObject<XeroOAuth2Token>(decryptedToken);
+            var token = JsonConvert.DeserializeObject<XeroOAuth2Token>(decryptedToken);
+            var json = JObject.Parse(decryptedToken); // ← using Newtonsoft.Json.Linq
+            //Console.WriteLine(json);
+            return token;
         }
+
         public void DestroyToken()
         {
             if (File.Exists(_tokenFilePath))

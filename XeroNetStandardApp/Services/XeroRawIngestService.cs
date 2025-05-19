@@ -1,4 +1,20 @@
-﻿using System;
+﻿// Services/XeroRawIngestService.cs
+//
+// Generic ingest pipeline that now:
+//   • Detects an EndpointConfig.Status[] array
+//   • Loops over each status value (REGISTERED, DRAFT, …)
+//   • Adds  status=<value>  before any other query-string parts
+//   • Keeps paging, modified-since and rate-limit logic exactly as before.
+//
+// Ric Wheatley – May 2025
+
+using Dapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,18 +22,14 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Npgsql;
 using Xero.NetStandard.OAuth2.Token;
 using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Services
 {
     /// <summary>
-    /// Pulls data from Xero RAW endpoints and stores each page as JSON payloads.
+    /// Pulls data from Xero endpoints (Accounting, Assets, etc.) and stores each page
+    /// as individual JSON payloads in the trunk schema.
     /// </summary>
     public sealed class XeroRawIngestService : IXeroRawIngestService
     {
@@ -42,18 +54,16 @@ namespace XeroNetStandardApp.Services
             _log = log;
             _tokenService = tokenService;
             _connString = cfg.GetConnectionString("Postgres")
-                          ?? throw new InvalidOperationException("Postgres conn string missing");
+                           ?? throw new InvalidOperationException("Postgres conn string missing");
         }
 
         // ─────────────────────────────────────────────
-        //  PUBLIC ENTRY‑POINTS
+        //  PUBLIC ENTRY-POINTS
         // ─────────────────────────────────────────────
 
-        /// <summary>Run all configured endpoints for a single tenant.</summary>
         public Task<int> RunOnceAsync(string tenantId)
             => RunCoreAsync(tenantId, _opt.Endpoints);
 
-        /// <summary>Run a single endpoint by key (mainly for manual re‑ingest).</summary>
         public Task<int> RunOnceAsync(string tenantId, string endpointKey)
         {
             var ep = _opt.Endpoints
@@ -73,14 +83,13 @@ namespace XeroNetStandardApp.Services
         }
 
         // ─────────────────────────────────────────────
-        //  CORE PIPELINE (shared by both entry‑points)
+        //  CORE PIPELINE
         // ─────────────────────────────────────────────
         private async Task<int> RunCoreAsync(string tenantId, IEnumerable<EndpointConfig> endpointsToRun)
         {
             var token = _tokenService.RetrieveToken()
                         ?? throw new InvalidOperationException("No saved Xero token on disk.");
 
-            // refresh ONCE if we’re inside the 2‑minute buffer
             if (TokenNeedsRefresh(token))
                 token = await RefreshAsync(token);
 
@@ -94,10 +103,7 @@ namespace XeroNetStandardApp.Services
             await conn.OpenAsync();
 
             foreach (var ep in endpointsToRun)
-            {
-                var rows = await IngestEndpointAsync(http, conn, ep, Guid.Parse(tenantId));
-                totalRows += Math.Max(rows, 0);
-            }
+                totalRows += await IngestEndpointAsync(http, conn, ep, Guid.Parse(tenantId));
 
             return totalRows;
         }
@@ -111,7 +117,7 @@ namespace XeroNetStandardApp.Services
         private async Task<XeroOAuth2Token> RefreshAsync(XeroOAuth2Token current)
         {
             if (string.IsNullOrWhiteSpace(current.RefreshToken))
-                throw new InvalidOperationException("No refresh‑token available.");
+                throw new InvalidOperationException("No refresh-token available.");
 
             var clientId = _cfg["XeroConfiguration:ClientId"] ?? string.Empty;
             var clientSecret = _cfg["XeroConfiguration:ClientSecret"] ?? string.Empty;
@@ -131,14 +137,13 @@ namespace XeroNetStandardApp.Services
             if (!resp.IsSuccessStatusCode)
             {
                 _log.LogError("Token refresh failed: {Status} {Body}", resp.StatusCode, raw);
-                resp.EnsureSuccessStatusCode(); // throws with full context
+                resp.EnsureSuccessStatusCode();
             }
 
             var refreshed = JsonSerializer.Deserialize<XeroOAuth2Token>(raw)!;
             var expiresIn = JsonDocument.Parse(raw).RootElement.GetProperty("expires_in").GetInt32();
             refreshed.ExpiresAtUtc = DateTime.UtcNow.AddSeconds(expiresIn);
 
-            // Preserve tenants & ID token – Xero doesn’t return them on refresh
             refreshed.Tenants = current.Tenants;
             refreshed.IdToken = current.IdToken;
 
@@ -164,43 +169,13 @@ namespace XeroNetStandardApp.Services
                 if (endpoint.SupportsModifiedSince && since != null)
                     http.DefaultRequestHeaders.IfModifiedSince = since;
 
-                var path = endpoint.Name.Replace(" ", string.Empty);
-                var baseUrl = endpoint.ApiUrl.TrimEnd('/') + "/";
-                var url = endpoint.SupportsPagination ? $"{baseUrl}{path}?page=1" : $"{baseUrl}{path}";
-                var resp = await http.GetAsync(url);
-                var body = await resp.Content.ReadAsStringAsync();
+                // ── loop over each Status value (or a single null value if none provided)
+                var statusList = (endpoint.Status?.Length ?? 0) > 0
+                                 ? endpoint.Status
+                                 : new[] { (string?)null };
 
-                if (resp.StatusCode == HttpStatusCode.NotModified)
-                {
-                    _log.LogInformation("{Endpoint}: up‑to‑date (since {Since})", endpoint.Name, since?.ToString("u"));
-                    return 0;
-                }
-
-                if (!resp.IsSuccessStatusCode)
-                {
-                    _log.LogWarning("{Endpoint}: {Status} – {Body}", endpoint.Name, resp.StatusCode, body);
-                    return 0;
-                }
-
-                var totalPages = GetTotalPages(resp);
-                rows += await InsertPageAsync(conn, table, endpoint.Name, 1, body, tenantId);
-
-                for (var page = 2; page <= totalPages; page++)
-                {
-                    await Task.Delay(1100); // stay inside Xero’s 60‑calls‑per‑minute limit
-                    resp = await http.GetAsync($"{baseUrl}{path}?page={page}");
-                    body = await resp.Content.ReadAsStringAsync();
-
-                    if (!resp.IsSuccessStatusCode)
-                    {
-                        _log.LogWarning("{Endpoint} page {Page}: {Status} – {Body}", endpoint.Name, page, resp.StatusCode, body);
-                        break;
-                    }
-
-                    rows += await InsertPageAsync(conn, table, endpoint.Name, page, body, tenantId);
-                }
-
-                _log.LogInformation("{Endpoint}: {Rows} rows inserted over {Pages} pages", endpoint.Name, rows, totalPages);
+                foreach (var status in statusList)
+                    rows += await IngestForOneStatusAsync(http, conn, endpoint, tenantId, table, status, since);
             }
             catch (Exception ex)
             {
@@ -214,6 +189,63 @@ namespace XeroNetStandardApp.Services
             return rows;
         }
 
+        private async Task<int> IngestForOneStatusAsync(HttpClient http,
+                                                        NpgsqlConnection conn,
+                                                        EndpointConfig endpoint,
+                                                        Guid tenantId,
+                                                        string table,
+                                                        string? status,
+                                                        DateTimeOffset? since)
+        {
+            var rows = 0;
+            var path = endpoint.Name.Replace(" ", string.Empty);
+            var baseUrl = endpoint.ApiUrl.TrimEnd('/') + "/";
+            var queryBase = status == null ? string.Empty : $"status={status}&";
+            var pagePart = endpoint.SupportsPagination ? "page=1" : string.Empty;
+            var url = $"{baseUrl}{path}?{queryBase}{pagePart}".TrimEnd('?');
+
+            var resp = await http.GetAsync(url);
+            var body = await resp.Content.ReadAsStringAsync();
+
+            if (resp.StatusCode == HttpStatusCode.NotModified)
+            {
+                _log.LogInformation("{Endpoint} {Status}: up-to-date (since {Since})",
+                                    endpoint.Name, status ?? "-", since?.ToString("u"));
+                return 0;
+            }
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                _log.LogWarning("{Endpoint} {Status}: {Code} – {Body}",
+                                endpoint.Name, status ?? "-", resp.StatusCode, body);
+                return 0;
+            }
+
+            var totalPages = GetTotalPages(resp);
+            rows += await InsertPageAsync(conn, table, endpoint, 1, body, tenantId);
+
+            for (var page = 2; page <= totalPages; page++)
+            {
+                await Task.Delay(1100); // stay within Xero’s 60-calls-per-minute ceiling
+                resp = await http.GetAsync($"{baseUrl}{path}?{queryBase}page={page}");
+                body = await resp.Content.ReadAsStringAsync();
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    _log.LogWarning("{Endpoint} {Status} page {Page}: {Code} – {Body}",
+                                    endpoint.Name, status ?? "-", page, resp.StatusCode, body);
+                    break;
+                }
+
+                rows += await InsertPageAsync(conn, table, endpoint, page, body, tenantId);
+            }
+
+            _log.LogInformation("{Endpoint} {Status}: {Rows} rows inserted over {Pages} pages",
+                                endpoint.Name, status ?? "-", rows, totalPages);
+
+            return rows;
+        }
+
         // ─────────────────────────────────────────────
         //  SMALL HELPERS
         // ─────────────────────────────────────────────
@@ -222,7 +254,7 @@ namespace XeroNetStandardApp.Services
             var last = await conn.ExecuteScalarAsync<DateTime?>(
                            $"SELECT MAX(fetched_at) FROM {table};");
 
-            return last == null ? null : new DateTimeOffset(last.Value, TimeSpan.Zero); // stored as UTC
+            return last == null ? null : new DateTimeOffset(last.Value, TimeSpan.Zero);
         }
 
         private static int GetTotalPages(HttpResponseMessage resp)
@@ -235,24 +267,39 @@ namespace XeroNetStandardApp.Services
         }
 
         private async Task<int> InsertPageAsync(NpgsqlConnection conn,
-                                                string table,
-                                                string endpoint,
-                                                int page,
-                                                string bodyJson,
-                                                Guid tenantId)
+                                        string table,
+                                        EndpointConfig endpoint,
+                                        int page,
+                                        string bodyJson,
+                                        Guid tenantId)
         {
             var root = JsonDocument.Parse(bodyJson).RootElement;
-            var key = endpoint.EndsWith("s") ? endpoint : endpoint + "s";
-            if (!root.TryGetProperty(key, out var arr)) return 0;
+
+            JsonElement arrayElement;
+            if (string.IsNullOrEmpty(endpoint.ResponseKey) && root.ValueKind == JsonValueKind.Array)
+            {
+                // Response is a bare JSON array – use it as-is
+                arrayElement = root;
+            }
+            else
+            {
+                var key = endpoint.ResponseKey
+                          ?? (endpoint.Name.EndsWith("s", StringComparison.Ordinal)
+                                 ? endpoint.Name
+                                 : endpoint.Name + "s");
+
+                if (!root.TryGetProperty(key, out arrayElement))
+                    return 0;                       // nothing we recognise – skip safely
+            }
 
             const string sql = @"INSERT INTO {0} (page_number, payload_json, tenant_id)
-                                 VALUES (@Page, @Payload::jsonb, @TenantId);";
+                         VALUES (@Page, @Payload::jsonb, @TenantId);";
 
-            foreach (var el in arr.EnumerateArray())
+            foreach (var el in arrayElement.EnumerateArray())        // ✔ now arrayElement
                 await conn.ExecuteAsync(string.Format(sql, table),
                                         new { Page = page, Payload = el.GetRawText(), TenantId = tenantId });
 
-            return arr.GetArrayLength();
+            return arrayElement.GetArrayLength();                    // ✔ now arrayElement
         }
     }
 }

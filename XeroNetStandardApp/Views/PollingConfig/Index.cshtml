@@ -5,50 +5,126 @@
 
 <h2>Polling Configuration</h2>
 
-@foreach (var tenant in Model.Tenants)
-{
-    <h4>@tenant.OrgName</h4>
-    <table class="table table-sm table-bordered">
+<form asp-action="SaveSchedule" method="post">
+    <table class="table table-sm table-striped">
         <thead>
             <tr>
                 <th>Endpoint</th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">@tenant.OrgName</th>
+                }
+            </tr>
+            <tr>
+                <th></th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">
+                        <button type="submit"
+                                name="tenantId"
+                                value="@tenant.TenantId"
+                                class="btn btn-primary btn-sm">
+                            Save&nbsp;Schedule
+                        </button>
+                    </th>
+                }
+            </tr>
+            <tr>
+                <th></th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">
+                        <input type="checkbox" class="js-column-toggle" data-tenant="@tenant.TenantId" />
+                        <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
+                    </th>
+                }
+            </tr>
+            <tr>
                 <th>Frequency</th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">
+                        <select class="form-select form-select-sm" name="freq[@tenant.TenantId]">
+                            <option>Off</option>
+                            <option>Daily</option>
+                            <option>Weekly</option>
+                        </select>
+                    </th>
+                }
+            </tr>
+            <tr>
                 <th>Time</th>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <th class="text-center">
+                        <input type="time" class="form-control form-control-sm" name="time[@tenant.TenantId]" />
+                    </th>
+                }
             </tr>
         </thead>
         <tbody>
-            @foreach (var ep in Model.AccountingEndpoints)
+            @foreach (var ep in Model.Endpoints)
             {
                 <tr>
-                    <td>Accounting – @ep.DisplayName</td>
-                    <td>
-                        <select class="form-select form-select-sm" name="freq[@tenant.TenantId][@ep.Key]">
-                            <option>Off</option>
-                            <option>Daily</option>
-                            <option>Weekly</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="time" class="form-control form-control-sm" name="time[@tenant.TenantId][@ep.Key]" />
-                    </td>
-                </tr>
-            }
-            @foreach (var ep in Model.AssetsEndpoints)
-            {
-                <tr>
-                    <td>Assets – @ep.DisplayName</td>
-                    <td>
-                        <select class="form-select form-select-sm" name="freq[@tenant.TenantId][@ep.Key]">
-                            <option>Off</option>
-                            <option>Daily</option>
-                            <option>Weekly</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="time" class="form-control form-control-sm" name="time[@tenant.TenantId][@ep.Key]" />
-                    </td>
+                    <td>@ep.DisplayName</td>
+                    @foreach (var tenant in Model.Tenants)
+                    {
+                        <td class="text-center">
+                            <input type="checkbox"
+                                   name="selected[@tenant.TenantId]"
+                                   value="@ep.Key"
+                                   class="ep-checkbox tenant-@tenant.TenantId" />
+                        </td>
+                    }
                 </tr>
             }
         </tbody>
     </table>
+</form>
+
+@section Scripts {
+    <script>
+        // toggle an entire tenant column
+        document.querySelectorAll('.js-column-toggle').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                const tid = this.dataset.tenant;
+                document.querySelectorAll('.tenant-' + tid)
+                    .forEach(cb => cb.checked = toggle.checked);
+            });
+        });
+
+        // load saved schedules from localStorage
+        @foreach (var tenant in Model.Tenants)
+        {
+            <text>
+            (function() {
+                var data = localStorage.getItem('pollConf_@tenant.TenantId');
+                if (!data) return;
+                try {
+                    var obj = JSON.parse(data);
+                    if (obj.selected) obj.selected.forEach(function(key){
+                        var cb = document.querySelector('input.tenant-@tenant.TenantId[value="' + key + '"]');
+                        if (cb) cb.checked = true;
+                    });
+                    var sel = document.querySelector('select[name="freq[@tenant.TenantId]"]');
+                    if (sel && obj.freq) sel.value = obj.freq;
+                    var ti = document.querySelector('input[name="time[@tenant.TenantId]"]');
+                    if (ti && obj.time) ti.value = obj.time;
+                } catch(e) {}
+            })();
+            </text>
+        }
+
+        // save schedule to localStorage when button pressed
+        document.querySelectorAll('button[name="tenantId"]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var tid = this.value;
+                var selected = Array.from(document.querySelectorAll('.tenant-' + tid + ':checked')).map(cb => cb.value);
+                var freq = document.querySelector('select[name="freq[' + tid + ']" ]').value;
+                var time = document.querySelector('input[name="time[' + tid + ']" ]').value;
+                localStorage.setItem('pollConf_' + tid, JSON.stringify({selected: selected, freq: freq, time: time}));
+                localStorage.setItem('pollLast_' + tid, new Date().toISOString());
+            });
+        });
+    </script>
 }

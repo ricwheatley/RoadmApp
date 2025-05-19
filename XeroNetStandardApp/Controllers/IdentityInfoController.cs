@@ -127,8 +127,7 @@ namespace XeroNetStandardApp.Controllers
             }
 
             foreach (var kv in inserted)
-                if (kv.Value > 0)
-                    TempData[$"PollLast_{kv.Key}"] = DateTime.UtcNow.ToString("o");
+                TempData[$"PollLast_{kv.Key}"] = DateTime.UtcNow.ToString("o");
 
             TempData["Message"] =
                 tenantId == "ALL"

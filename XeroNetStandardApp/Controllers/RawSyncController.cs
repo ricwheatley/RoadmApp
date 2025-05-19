@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using XeroNetStandardApp.Services;
@@ -39,8 +40,12 @@ namespace XeroNetStandardApp.Controllers
                 return RedirectToAction("Index", "IdentityInfo");
             }
 
+            var totalRows = 0;
             foreach (var ep in selectedEndpoints)
-                await _pollingService.RunEndpointAsync(tenantId, ep);
+                totalRows += await _pollingService.RunEndpointAsync(tenantId, ep);
+
+            if (totalRows > 0)
+                TempData[$"PollLast_{tenantId}"] = DateTime.UtcNow.ToString("o");
 
             TempData["Message"] = "Polling triggered.";
             return RedirectToAction("Index", "IdentityInfo");

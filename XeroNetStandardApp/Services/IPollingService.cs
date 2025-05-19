@@ -4,6 +4,10 @@ namespace XeroNetStandardApp.Services
 {
     public interface IPollingService
     {
-        Task RunEndpointAsync(string tenantId, string endpointKey);
+        /// <summary>
+        /// Runs the ingest pipeline for a specific endpoint and returns the
+        /// number of rows inserted.
+        /// </summary>
+        Task<int> RunEndpointAsync(string tenantId, string endpointKey);
     }
 }

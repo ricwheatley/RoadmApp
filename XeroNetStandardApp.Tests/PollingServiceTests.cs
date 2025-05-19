@@ -37,9 +37,10 @@ namespace XeroNetStandardApp.Tests
             });
 
             var svc = new PollingService(tokenService, raw, NullLogger<PollingService>.Instance);
-            await svc.RunEndpointAsync("123", "assets");
+            var rows = await svc.RunEndpointAsync("123", "assets");
 
             Assert.Equal(("123", "assets"), raw.LastCall);
+            Assert.Equal(0, rows);
         }
     }
 }

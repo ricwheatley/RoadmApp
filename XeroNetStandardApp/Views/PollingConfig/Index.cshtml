@@ -1,0 +1,54 @@
+@model XeroNetStandardApp.Models.PollingConfigViewModel
+@{
+    ViewData["Title"] = "Polling Configuration";
+}
+
+<h2>Polling Configuration</h2>
+
+@foreach (var tenant in Model.Tenants)
+{
+    <h4>@tenant.OrgName</h4>
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Endpoint</th>
+                <th>Frequency</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ep in Model.AccountingEndpoints)
+            {
+                <tr>
+                    <td>Accounting – @ep.DisplayName</td>
+                    <td>
+                        <select class="form-select form-select-sm" name="freq[@tenant.TenantId][@ep.Key]">
+                            <option>Off</option>
+                            <option>Daily</option>
+                            <option>Weekly</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="time" class="form-control form-control-sm" name="time[@tenant.TenantId][@ep.Key]" />
+                    </td>
+                </tr>
+            }
+            @foreach (var ep in Model.AssetsEndpoints)
+            {
+                <tr>
+                    <td>Assets – @ep.DisplayName</td>
+                    <td>
+                        <select class="form-select form-select-sm" name="freq[@tenant.TenantId][@ep.Key]">
+                            <option>Off</option>
+                            <option>Daily</option>
+                            <option>Weekly</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="time" class="form-control form-control-sm" name="time[@tenant.TenantId][@ep.Key]" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

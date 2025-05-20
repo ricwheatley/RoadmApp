@@ -78,6 +78,41 @@
 
 </form>
 
+<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background:rgba(255,255,255,0.8);z-index:1050;">
+    <div class="text-center">
+        <div class="spinner-border" role="status"></div>
+        <div class="mt-2">Processing...</div>
+    </div>
+</div>
+
+<h3>Last Run Summary</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Organisation</th>
+            <th>Last Call (UTC)</th>
+            <th>Successes</th>
+            <th>Failures</th>
+            <th>Rows Inserted</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model.Tenants)
+        {
+            if (Model.Stats.TryGetValue(t.TenantId!, out var s))
+            {
+                <tr>
+                    <td>@t.OrgName</td>
+                    <td>@s.LastCall.ToString("g")</td>
+                    <td>@s.EndpointsSuccess</td>
+                    <td>@s.EndpointsFail</td>
+                    <td>@s.RecordsInserted</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
 @section Scripts {
     <script>
         // toggle an entire tenant column
@@ -88,6 +123,9 @@
                 document.querySelectorAll('.tenant-' + tid)
                         .forEach(cb => cb.checked = toggle.checked);
             });
+        });
+        document.querySelector('form')?.addEventListener('submit', function () {
+            document.getElementById('runProgress')?.classList.remove('d-none');
         });
     </script>
     @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))

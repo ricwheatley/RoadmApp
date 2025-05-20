@@ -10,5 +10,11 @@ namespace XeroNetStandardApp.Services
         /// number of rows inserted.
         /// </summary>
         Task<int> RunEndpointAsync(string tenantId, string endpointKey, DateTimeOffset callTime);
+
+        /// <summary>
+        /// Return aggregated statistics for each organisation based on the
+        /// <c>utils.api_call_log</c> table.
+        /// </summary>
+        Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync();
     }
 }

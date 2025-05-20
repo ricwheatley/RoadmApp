@@ -75,40 +75,62 @@
 
 @section Scripts {
     <script>
+        console.log('Starting script execution');
+
         document.querySelectorAll('.last-polled').forEach(function (cell) {
             var tid = cell.getAttribute('data-tenant');
+            console.log('Processing last-polled cell for tenant ID:', tid);
+
             var val = localStorage.getItem('pollLast_' + tid);
+            console.log('Retrieved value from local storage:', val);
 
             if (!val) {
+                console.log('No value found in local storage, setting text to "Not updated yet"');
                 cell.textContent = 'Not updated yet';
                 return;
             }
 
             var d = new Date(val);
+            console.log('Parsed date:', d);
+
             if (isNaN(d.getTime())) {
+                console.log('Invalid date, setting text to "Not updated yet"');
                 cell.textContent = 'Not updated yet';
                 return;
             }
 
+            console.log('Setting text to:', d.toLocaleString());
             cell.textContent = d.toLocaleString();
         });
 
+        console.log('Finished processing last-polled cells');
+
         document.querySelectorAll('.last-rows').forEach(function (cell) {
             var tid = cell.getAttribute('data-tenant');
+            console.log('Processing last-rows cell for tenant ID:', tid);
+
             var val = localStorage.getItem('pollRows_' + tid);
+            console.log('Retrieved value from local storage:', val);
 
             if (!val) {
+                console.log('No value found in local storage, setting text to "—"');
                 cell.textContent = '—';
                 return;
             }
 
             var n = parseInt(val);
+            console.log('Parsed integer value:', n);
+
             if (isNaN(n)) {
+                console.log('Invalid integer value, setting text to "—"');
                 cell.textContent = '—';
                 return;
             }
 
+            console.log('Setting text to:', n);
             cell.textContent = n;
         });
+
+        console.log('Finished script execution');
     </script>
 }

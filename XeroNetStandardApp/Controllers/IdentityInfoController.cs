@@ -128,7 +128,9 @@ namespace XeroNetStandardApp.Controllers
 
             foreach (var kv in inserted)
             {
-                TempData[$"PollLast_{kv.Key}"] = DateTime.UtcNow.ToString("o");
+                Console.WriteLine($"Run time: {DateTime.UtcNow:o}");
+                TempData[$"PollLast_{kv.Key}"] = $"{DateTime.UtcNow:o}";
+                Console.WriteLine($"Total rows: {kv.Value}");
                 TempData[$"PollRows_{kv.Key}"] = kv.Value.ToString();
             }
 

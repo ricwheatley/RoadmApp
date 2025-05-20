@@ -98,8 +98,7 @@ namespace XeroNetStandardApp.Controllers
             foreach (var stat in filteredStats)
                 _log.LogInformation("Model has org {org} last run {dt} success {succ} fail {fail} rows {rows}",
                     stat.Key, stat.Value.LastCall, stat.Value.EndpointsSuccess, stat.Value.EndpointsFail, stat.Value.RecordsInserted);
-            Console.WriteLine("Test message from Ric filteredStats");
-            _log.LogError("Test message from Ric filteredStats");
+
             return View(model);
         }
 
@@ -145,9 +144,7 @@ namespace XeroNetStandardApp.Controllers
 
             foreach (var kv in inserted)
             {
-                Console.WriteLine($"Run time: {DateTime.UtcNow:o}");
                 TempData[$"PollLast_{kv.Key}"] = $"{DateTime.UtcNow:o}";
-                Console.WriteLine($"Total rows: {kv.Value}");
                 TempData[$"PollRows_{kv.Key}"] = kv.Value.ToString();
             }
 
@@ -164,8 +161,6 @@ namespace XeroNetStandardApp.Controllers
             foreach (var stat in runStats)
                 _log.LogInformation("Model has org {org} last run {dt} success {succ} fail {fail} rows {rows}",
                     stat.Key, stat.Value.LastCall, stat.Value.EndpointsSuccess, stat.Value.EndpointsFail, stat.Value.RecordsInserted);
-            Console.WriteLine("Test message from Ric runStats");
-            _log.LogError("Test message from Ric runStats");
             var summaries = new List<string>();
             foreach (var kv in inserted)
             {

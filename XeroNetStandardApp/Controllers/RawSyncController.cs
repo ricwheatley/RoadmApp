@@ -45,9 +45,11 @@ namespace XeroNetStandardApp.Controllers
             foreach (var ep in selectedEndpoints)
                 totalRows += await _pollingService.RunEndpointAsync(tenantId, ep, callTime);
 
-            Console.WriteLine($"Run time: {DateTime.UtcNow.ToString("o")}");
+            Console.WriteLine($"Run time: {DateTime.UtcNow:o}");
             Console.WriteLine($"Total rows: {totalRows}");
-            TempData[$"PollLast_{tenantId}"] = DateTime.UtcNow.ToString("o");
+            // store as epoch ms for easier JS parsing
+            TempData[$"PollLast_{tenantId}"] =
+                DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             TempData[$"PollRows_{tenantId}"] = totalRows.ToString();
 
             TempData["Message"] = "Polling triggered.";

@@ -103,6 +103,10 @@ namespace XeroNetStandardApp.Controllers
                 return RedirectToAction("Index");
             }
 
+            // Capture baseline stats so we can report deltas after the run
+            var beforeStats = (await _pollingService.GetPollingStatsAsync())
+                .ToDictionary(s => s.OrganisationId.ToString());
+
             // Run requested polling and capture number of rows inserted
             var inserted = new Dictionary<string, int>();
             var callTime = DateTimeOffset.UtcNow;
@@ -137,6 +141,30 @@ namespace XeroNetStandardApp.Controllers
                 Console.WriteLine($"Total rows: {kv.Value}");
                 TempData[$"PollRows_{kv.Key}"] = kv.Value.ToString();
             }
+
+            // Capture stats after the run and compute differences
+            var afterStats = (await _pollingService.GetPollingStatsAsync())
+                .ToDictionary(s => s.OrganisationId.ToString());
+
+            var token = await GetValidXeroTokenAsync();
+            var orgNames = token?.Tenants?.ToDictionary(t => t.TenantId.ToString(), t => t.TenantName)
+                           ?? new Dictionary<string, string>();
+
+            var summaries = new List<string>();
+            foreach (var kv in inserted)
+            {
+                afterStats.TryGetValue(kv.Key, out var after);
+                beforeStats.TryGetValue(kv.Key, out var before);
+
+                var successDelta = (after?.EndpointsSuccess ?? 0) - (before?.EndpointsSuccess ?? 0);
+                var failDelta = (after?.EndpointsFail ?? 0) - (before?.EndpointsFail ?? 0);
+                var rowsDelta = (after?.RecordsInserted ?? 0) - (before?.RecordsInserted ?? 0);
+
+                var name = orgNames.TryGetValue(kv.Key, out var n) ? n : kv.Key;
+                summaries.Add($"{successDelta} successful endpoint(s) polled, {failDelta} endpoint(s) failed, and {rowsDelta} records inserted for {name}");
+            }
+
+            TempData["RunStatus"] = "Manual run completed with " + string.Join("; ", summaries);
 
             TempData["Message"] =
                 tenantId == "ALL"

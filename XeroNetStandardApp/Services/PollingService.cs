@@ -70,11 +70,11 @@ namespace XeroNetStandardApp.Services
                     GROUP BY organisation_id
                 )
                 SELECT
-                    c.organisation_id   AS "OrganisationId",
-                    l.last_call         AS "LastCall",
-                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS "EndpointsSuccess",
-                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS "EndpointsFail",
-                    SUM(c.rows_inserted)                         AS "RecordsInserted"
+                    c.organisation_id   AS 'OrganisationId',
+                    l.last_call         AS 'LastCall',
+                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS 'EndpointsSuccess',
+                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS 'EndpointsFail',
+                    SUM(c.rows_inserted)                         AS 'RecordsInserted'
                 FROM utils.api_call_log c
                 JOIN last_run l
                   ON c.organisation_id = l.organisation_id
@@ -96,11 +96,11 @@ namespace XeroNetStandardApp.Services
                     GROUP BY organisation_id
                 )
                 SELECT
-                    c.organisation_id   AS "OrganisationId",
-                    l.last_call         AS "LastCall",
-                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS "EndpointsSuccess",
-                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS "EndpointsFail",
-                    SUM(c.rows_inserted)                         AS "RecordsInserted"
+                    c.organisation_id   AS 'OrganisationId',
+                    l.last_call         AS 'LastCall',
+                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS 'EndpointsSuccess',
+                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS 'EndpointsFail',
+                    SUM(c.rows_inserted)                         AS 'RecordsInserted'
                 FROM utils.api_call_log c
                 JOIN last_run l
                   ON c.organisation_id = l.organisation_id

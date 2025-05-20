@@ -63,18 +63,24 @@ namespace XeroNetStandardApp.Services
 
         public async Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
         {
-            const string sql = @"SELECT
-    organisation_id, 
-    max(call_time) AS last_call,
-    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
-    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
-    SUM(rows_inserted) AS records_inserted
-FROM 
-    utils.api_call_log as clog
-WHERE
-	call_time = (select max(call_time) from utils.api_call_log as xclog where xclog.organisation_id = clog.organisation_id)
-GROUP BY 
-    organisation_id;";
+            const string sql = @"
+                WITH last_run AS (
+                    SELECT organisation_id, MAX(call_time) AS last_call
+                    FROM utils.api_call_log
+                    GROUP BY organisation_id
+                )
+                SELECT
+                    c.organisation_id,
+                    l.last_call,
+                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
+                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
+                    SUM(c.rows_inserted) AS records_inserted
+                FROM utils.api_call_log c
+                JOIN last_run l 
+                  ON c.organisation_id = l.organisation_id
+                 AND c.call_time = l.last_call
+                GROUP BY c.organisation_id, l.last_call;
+            ";
 
             await using var conn = new NpgsqlConnection(_connString);
             var result = await conn.QueryAsync<PollingStats>(sql);
@@ -83,19 +89,24 @@ GROUP BY
 
         public async Task<IReadOnlyList<PollingStats>> GetPollingStatsForRunAsync(DateTimeOffset callTime)
         {
-            const string sql = @"SELECT
-    organisation_id, 
-    max(call_time) AS last_call,
-    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
-    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
-    SUM(rows_inserted) AS records_inserted
-FROM 
-    utils.api_call_log as clog
-WHERE
-	call_time = (select max(call_time) from utils.api_call_log as xclog where xclog.organisation_id = clog.organisation_id)
-    and call_time = @CallTime
-GROUP BY 
-    organisation_id;";
+            const string sql = @"
+                WITH last_run AS (
+                    SELECT organisation_id, MAX(call_time) AS last_call
+                    FROM utils.api_call_log
+                    GROUP BY organisation_id
+                )
+                SELECT
+                    c.organisation_id,
+                    l.last_call,
+                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
+                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
+                    SUM(c.rows_inserted) AS records_inserted
+                FROM utils.api_call_log c
+                JOIN last_run l 
+                  ON c.organisation_id = l.organisation_id
+                 AND c.call_time = l.last_call
+                GROUP BY c.organisation_id, l.last_call;
+            ";
 
             await using var conn = new NpgsqlConnection(_connString);
             var result = await conn.QueryAsync<PollingStats>(sql, new { CallTime = callTime });

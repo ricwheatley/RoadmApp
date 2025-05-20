@@ -95,7 +95,11 @@ namespace XeroNetStandardApp.Controllers
                 .ToDictionary(s => s.OrganisationId.ToString());
 
             model.Stats = filteredStats;
-
+            foreach (var stat in filteredStats)
+                _log.LogInformation("Model has org {org} last run {dt} success {succ} fail {fail} rows {rows}",
+                    stat.Key, stat.Value.LastCall, stat.Value.EndpointsSuccess, stat.Value.EndpointsFail, stat.Value.RecordsInserted);
+            Console.WriteLine("Test message from Ric filteredStats");
+            _log.LogError("Test message from Ric filteredStats");
             return View(model);
         }
 
@@ -149,12 +153,19 @@ namespace XeroNetStandardApp.Controllers
 
             // Capture stats for this run
             var runStats = (await _pollingService.GetPollingStatsForRunAsync(callTime))
+                .Where(s => s.OrganisationId != Guid.Empty)
+                .GroupBy(s => s.OrganisationId)
+                .Select(g => g.First())
                 .ToDictionary(s => s.OrganisationId.ToString());
 
             var token = await GetValidXeroTokenAsync();
             var orgNames = token?.Tenants?.ToDictionary(t => t.TenantId.ToString(), t => t.TenantName)
                            ?? new Dictionary<string, string>();
-
+            foreach (var stat in runStats)
+                _log.LogInformation("Model has org {org} last run {dt} success {succ} fail {fail} rows {rows}",
+                    stat.Key, stat.Value.LastCall, stat.Value.EndpointsSuccess, stat.Value.EndpointsFail, stat.Value.RecordsInserted);
+            Console.WriteLine("Test message from Ric runStats");
+            _log.LogError("Test message from Ric runStats");
             var summaries = new List<string>();
             foreach (var kv in inserted)
             {

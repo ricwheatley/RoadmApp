@@ -90,7 +90,7 @@
                     return;
                 }
 
-                var d = new Date(val);
+                var d = new Date(parseInt(val, 10));
                 console.log('Parsed date:', d);
 
                 if (isNaN(d.getTime())) {

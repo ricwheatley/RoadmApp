@@ -64,13 +64,17 @@ namespace XeroNetStandardApp.Services
         public async Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
         {
             const string sql = @"SELECT
-    organisation_id AS OrganisationId,
-    max(call_time) AS LastCall,
-    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS EndpointsSuccess,
-    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS EndpointsFail,
-    SUM(rows_inserted) AS RecordsInserted
-FROM utils.api_call_log
-GROUP BY organisation_id;";
+    organisation_id, 
+    max(call_time) AS last_call,
+    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
+    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
+    SUM(rows_inserted) AS records_inserted
+FROM 
+    utils.api_call_log as clog
+WHERE
+	call_time = (select max(call_time) from utils.api_call_log as xclog where xclog.organisation_id = clog.organisation_id)
+GROUP BY 
+    organisation_id;";
 
             await using var conn = new NpgsqlConnection(_connString);
             var result = await conn.QueryAsync<PollingStats>(sql);
@@ -80,14 +84,18 @@ GROUP BY organisation_id;";
         public async Task<IReadOnlyList<PollingStats>> GetPollingStatsForRunAsync(DateTimeOffset callTime)
         {
             const string sql = @"SELECT
-    organisation_id AS OrganisationId,
-    max(call_time) AS LastCall,
-    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS EndpointsSuccess,
-    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS EndpointsFail,
-    SUM(rows_inserted) AS RecordsInserted
-FROM utils.api_call_log
-WHERE call_time = @CallTime
-GROUP BY organisation_id;";
+    organisation_id, 
+    max(call_time) AS last_call,
+    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
+    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
+    SUM(rows_inserted) AS records_inserted
+FROM 
+    utils.api_call_log as clog
+WHERE
+	call_time = (select max(call_time) from utils.api_call_log as xclog where xclog.organisation_id = clog.organisation_id)
+    and call_time = @CallTime
+GROUP BY 
+    organisation_id;";
 
             await using var conn = new NpgsqlConnection(_connString);
             var result = await conn.QueryAsync<PollingStats>(sql, new { CallTime = callTime });
@@ -98,13 +106,19 @@ GROUP BY organisation_id;";
         {
             try
             {
+                if (!Guid.TryParse(tenantId, out var orgGuid) || orgGuid == Guid.Empty)
+                {
+                    _log.LogWarning("Attempted to log polling result with invalid or empty tenantId: '{TenantId}' for endpoint {EndpointKey}", tenantId, endpointKey);
+                    return;
+                }
+
                 await using var conn = new NpgsqlConnection(_connString);
                 const string sql = @"INSERT INTO utils.api_call_log (organisation_id, endpoint, rows_inserted, call_time, status_code, success, error_message)
-                                      VALUES (@OrgId, @Endpoint, @Rows, @CallTime, @StatusCode, @Success, @Error);";
+                              VALUES (@OrgId, @Endpoint, @Rows, @CallTime, @StatusCode, @Success, @Error);";
 
                 await conn.ExecuteAsync(sql, new
                 {
-                    OrgId = Guid.Parse(tenantId),
+                    OrgId = orgGuid,
                     Endpoint = endpointKey,
                     Rows = rows,
                     CallTime = callTime,
@@ -118,5 +132,6 @@ GROUP BY organisation_id;";
                 _log.LogError(ex, "Failed to record api_call_log for {Endpoint}", endpointKey);
             }
         }
+
     }
 }

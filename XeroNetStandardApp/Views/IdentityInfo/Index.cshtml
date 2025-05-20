@@ -4,11 +4,37 @@
     ViewBag.Title = "Endpoint Control Panel";
 }
 
+<h3>Last Run Summary</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Organisation</th>
+            <th>Last Call (UTC)</th>
+            <th>Successes</th>
+            <th>Failures</th>
+            <th>Rows Inserted</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model.Tenants)
+        {
+            if (Model.Stats.TryGetValue(t.TenantId!, out var s))
+            {
+                <tr>
+                    <td>@t.OrgName</td>
+                    <td>@s.LastCall.ToString("g")</td>
+                    <td>@s.EndpointsSuccess</td>
+                    <td>@s.EndpointsFail</td>
+                    <td>@s.RecordsInserted</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
 <h2>Endpoint Control Panel</h2>
 
-
 <form asp-action="BulkTrigger" method="post">
-
     <table class="table table-sm table-striped">
         <thead>
             <tr>
@@ -56,7 +82,6 @@
                 }
             </tr>
         </thead>
-
         <tbody>
             @* grid: row = endpoint, column = tenant *@
             @foreach (var endpoint in Model.Endpoints)
@@ -76,7 +101,6 @@
             }
         </tbody>
     </table>
-
 </form>
 
 <div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background:rgba(255,255,255,0.8);z-index:1050;">
@@ -85,34 +109,6 @@
         <div id="runProgressMessage" class="mt-2">Processing...</div>
     </div>
 </div>
-
-<h3>Last Run Summary</h3>
-<table class="table table-sm">
-    <thead>
-        <tr>
-            <th>Organisation</th>
-            <th>Last Call (UTC)</th>
-            <th>Successes</th>
-            <th>Failures</th>
-            <th>Rows Inserted</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model.Tenants)
-        {
-            if (Model.Stats.TryGetValue(t.TenantId!, out var s))
-            {
-                <tr>
-                    <td>@t.OrgName</td>
-                    <td>@s.LastCall.ToString("g")</td>
-                    <td>@s.EndpointsSuccess</td>
-                    <td>@s.EndpointsFail</td>
-                    <td>@s.RecordsInserted</td>
-                </tr>
-            }
-        }
-    </tbody>
-</table>
 
 @section Scripts {
     <script>
@@ -149,9 +145,9 @@
         <script>
             @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
             {
-                var tid = key.Substring("PollLast_".Length);
-                var val = TempData[key];
-                <text>localStorage.setItem('pollLast_@tid', '@val');</text>
+                    var tid = key.Substring("PollLast_".Length);
+                    var val = TempData[key];
+                    <text>localStorage.setItem('pollLast_@tid', '@val');</text>
             }
         </script>
     }
@@ -160,9 +156,9 @@
         <script>
             @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
             {
-                var tid = key.Substring("PollRows_".Length);
-                var val = TempData[key];
-                <text>localStorage.setItem('pollRows_@tid', '@val');</text>
+                    var tid = key.Substring("PollRows_".Length);
+                    var val = TempData[key];
+                    <text>localStorage.setItem('pollRows_@tid', '@val');</text>
             }
         </script>
     }

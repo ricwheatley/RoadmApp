@@ -33,7 +33,18 @@ namespace XeroNetStandardApp.Tests
             });
 
             var response = await _client.PostAsync("/IdentityInfo/BulkTrigger", content);
+            var response = await _client.PostAsync("/IdentityInfo/BulkTrigger", content);
 
+            if (response.StatusCode != HttpStatusCode.Redirect)
+            {
+                // Get the full response content
+                var body = await response.Content.ReadAsStringAsync();
+                // Throw with details, which will show up in CI logs
+                throw new Exception(
+                    $"Failed with status: {response.StatusCode}\nResponse body:\n{body}"
+                );
+            }
+            
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
             Assert.Contains(_factory.StubPolling.Calls, c => c.Tenant == "123" && c.Endpoint == "accounts");
             Assert.Contains(_factory.StubPolling.Calls, c => c.Tenant == "123" && c.Endpoint == "invoices");

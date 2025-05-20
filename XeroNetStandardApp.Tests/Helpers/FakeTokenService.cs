@@ -1,12 +1,13 @@
 using XeroNetStandardApp.Services;
 using Xero.NetStandard.OAuth2.Token;
+using Microsoft.AspNetCore.DataProtection; // Ensure this is added
 using System;
 
 namespace XeroNetStandardApp.Tests.Helpers
 {
     public class FakeTokenService : TokenService
     {
-        public FakeTokenService() : base(null, null) { }
+        public FakeTokenService(IDataProtectionProvider provider) : base(provider) { }
 
         public override XeroOAuth2Token RetrieveToken()
         {

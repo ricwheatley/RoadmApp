@@ -102,6 +102,7 @@ namespace XeroNetStandardApp.Controllers
 
             // Run requested polling and capture number of rows inserted
             var inserted = new Dictionary<string, int>();
+            var callTime = DateTimeOffset.UtcNow;
 
             if (tenantId == "ALL")
             {
@@ -109,7 +110,7 @@ namespace XeroNetStandardApp.Controllers
                 {
                     var count = 0;
                     foreach (var ep in endpoints)
-                        count += await _pollingService.RunEndpointAsync(tId, ep);
+                        count += await _pollingService.RunEndpointAsync(tId, ep, callTime);
                     inserted[tId] = count;
                 }
             }
@@ -117,7 +118,7 @@ namespace XeroNetStandardApp.Controllers
             {
                 var count = 0;
                 foreach (var ep in endpointsForTenant)
-                    count += await _pollingService.RunEndpointAsync(tenantId, ep);
+                    count += await _pollingService.RunEndpointAsync(tenantId, ep, callTime);
                 inserted[tenantId] = count;
             }
             else

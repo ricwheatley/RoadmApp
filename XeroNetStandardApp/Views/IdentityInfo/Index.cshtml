@@ -1,4 +1,5 @@
 ﻿@model XeroNetStandardApp.Models.EndpointControlPanelViewModel
+@using System.Text.Json
 @{
     ViewBag.Title = "Endpoint Control Panel";
 }
@@ -81,7 +82,7 @@
 <div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background:rgba(255,255,255,0.8);z-index:1050;">
     <div class="text-center">
         <div class="spinner-border" role="status"></div>
-        <div class="mt-2">Processing...</div>
+        <div id="runProgressMessage" class="mt-2">Processing...</div>
     </div>
 </div>
 
@@ -125,7 +126,22 @@
             });
         });
         document.querySelector('form')?.addEventListener('submit', function () {
-            document.getElementById('runProgress')?.classList.remove('d-none');
+            const overlay = document.getElementById('runProgress');
+            const msg = document.getElementById('runProgressMessage');
+            if (msg) msg.textContent = 'Manual data load initiated';
+            overlay?.classList.remove('d-none');
+        });
+
+        window.addEventListener('DOMContentLoaded', function () {
+            var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
+            if (finalMsg) {
+                const overlay = document.getElementById('runProgress');
+                const msg = document.getElementById('runProgressMessage');
+                overlay.querySelector('.spinner-border')?.classList.add('d-none');
+                if (msg) msg.textContent = finalMsg;
+                overlay?.classList.remove('d-none');
+                setTimeout(() => overlay?.classList.add('d-none'), 5000);
+            }
         });
     </script>
     @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))

@@ -18,5 +18,8 @@ namespace XeroNetStandardApp.Tests.Helpers
 
         public Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
             => Task.FromResult<IReadOnlyList<PollingStats>>(new List<PollingStats>());
+
+        public Task<IReadOnlyList<PollingStats>> GetPollingStatsForRunAsync(DateTimeOffset callTime)
+            => Task.FromResult<IReadOnlyList<PollingStats>>(new List<PollingStats>());
     }
 }

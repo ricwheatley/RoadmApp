@@ -19,5 +19,12 @@ namespace XeroNetStandardApp.Services
         /// <c>utils.api_call_log</c> table.
         /// </summary>
         Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync();
+
+        /// <summary>
+        /// Return aggregated statistics for the given run (identified by
+        /// <paramref name="callTime"/>). This is useful for summarising a
+        /// manual polling operation.
+        /// </summary>
+        Task<IReadOnlyList<PollingStats>> GetPollingStatsForRunAsync(DateTimeOffset callTime);
     }
 }

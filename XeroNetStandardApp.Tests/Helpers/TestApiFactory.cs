@@ -14,12 +14,21 @@ namespace XeroNetStandardApp.Tests.Helpers
         {
             builder.ConfigureServices(services =>
             {
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IPollingService));
-                if (descriptor != null)
+                // Replace IPollingService with stub
+                var pollingDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IPollingService));
+                if (pollingDescriptor != null)
                 {
-                    services.Remove(descriptor);
+                    services.Remove(pollingDescriptor);
                 }
                 services.AddSingleton<IPollingService>(StubPolling);
+
+                // Replace TokenService with fake
+                var tokenDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(TokenService));
+                if (tokenDescriptor != null)
+                {
+                    services.Remove(tokenDescriptor);
+                }
+                services.AddSingleton<TokenService, FakeTokenService>();
             });
         }
     }

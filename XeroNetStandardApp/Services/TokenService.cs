@@ -24,7 +24,7 @@ namespace XeroNetStandardApp.Services
             File.WriteAllText(_tokenFilePath, encryptedToken);
         }
 
-        public XeroOAuth2Token? RetrieveToken()
+        public virtual XeroOAuth2Token? RetrieveToken()
         {
             if (!File.Exists(_tokenFilePath))
                 return null;

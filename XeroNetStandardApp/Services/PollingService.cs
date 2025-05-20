@@ -63,7 +63,7 @@ namespace XeroNetStandardApp.Services
 
         public async Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
         {
-            const string sql = @"SELECT 
+            const string sql = @"SELECT
     organisation_id AS OrganisationId,
     max(call_time) AS LastCall,
     SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS EndpointsSuccess,
@@ -74,6 +74,23 @@ GROUP BY organisation_id;";
 
             await using var conn = new NpgsqlConnection(_connString);
             var result = await conn.QueryAsync<PollingStats>(sql);
+            return result.AsList();
+        }
+
+        public async Task<IReadOnlyList<PollingStats>> GetPollingStatsForRunAsync(DateTimeOffset callTime)
+        {
+            const string sql = @"SELECT
+    organisation_id AS OrganisationId,
+    max(call_time) AS LastCall,
+    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS EndpointsSuccess,
+    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS EndpointsFail,
+    SUM(rows_inserted) AS RecordsInserted
+FROM utils.api_call_log
+WHERE call_time = @CallTime
+GROUP BY organisation_id;";
+
+            await using var conn = new NpgsqlConnection(_connString);
+            var result = await conn.QueryAsync<PollingStats>(sql, new { CallTime = callTime });
             return result.AsList();
         }
 

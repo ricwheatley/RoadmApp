@@ -138,6 +138,25 @@ namespace XeroNetStandardApp.Controllers
                 TempData[$"PollRows_{kv.Key}"] = kv.Value.ToString();
             }
 
+            // Capture stats for this run
+            var runStats = (await _pollingService.GetPollingStatsForRunAsync(callTime))
+                .ToDictionary(s => s.OrganisationId.ToString());
+
+            var token = await GetValidXeroTokenAsync();
+            var orgNames = token?.Tenants?.ToDictionary(t => t.TenantId.ToString(), t => t.TenantName)
+                           ?? new Dictionary<string, string>();
+
+            var summaries = new List<string>();
+            foreach (var kv in inserted)
+            {
+                runStats.TryGetValue(kv.Key, out var stats);
+
+                var name = orgNames.TryGetValue(kv.Key, out var n) ? n : kv.Key;
+                summaries.Add($"{stats?.EndpointsSuccess ?? 0} successful endpoint(s) polled, {stats?.EndpointsFail ?? 0} endpoint(s) failed, and {stats?.RecordsInserted ?? 0} records inserted for {name}");
+            }
+
+            TempData["RunStatus"] = "Manual run completed with " + string.Join("; ", summaries);
+
             TempData["Message"] =
                 tenantId == "ALL"
                     ? $"Triggered {selected.Sum(kv => kv.Value.Length)} endpoint(s) across {selected.Count} organisation(s)."

@@ -45,6 +45,7 @@ namespace XeroNetStandardApp.Controllers
                 totalRows += await _pollingService.RunEndpointAsync(tenantId, ep);
 
             TempData[$"PollLast_{tenantId}"] = DateTime.UtcNow.ToString("o");
+            TempData[$"PollRows_{tenantId}"] = totalRows.ToString();
 
             TempData["Message"] = "Polling triggered.";
             return RedirectToAction("Index", "IdentityInfo");

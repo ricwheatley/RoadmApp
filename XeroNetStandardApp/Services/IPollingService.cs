@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace XeroNetStandardApp.Services
 {
@@ -8,6 +9,6 @@ namespace XeroNetStandardApp.Services
         /// Runs the ingest pipeline for a specific endpoint and returns the
         /// number of rows inserted.
         /// </summary>
-        Task<int> RunEndpointAsync(string tenantId, string endpointKey);
+        Task<int> RunEndpointAsync(string tenantId, string endpointKey, DateTimeOffset callTime);
     }
 }

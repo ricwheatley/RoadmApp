@@ -41,8 +41,9 @@ namespace XeroNetStandardApp.Controllers
             }
 
             var totalRows = 0;
+            var callTime = DateTimeOffset.UtcNow;
             foreach (var ep in selectedEndpoints)
-                totalRows += await _pollingService.RunEndpointAsync(tenantId, ep);
+                totalRows += await _pollingService.RunEndpointAsync(tenantId, ep, callTime);
 
             Console.WriteLine($"Run time: {DateTime.UtcNow.ToString("o")}");
             Console.WriteLine($"Total rows: {totalRows}");

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -32,7 +33,6 @@ namespace XeroNetStandardApp.Tests
                 new KeyValuePair<string,string>("selected[123][]", "invoices")
             });
 
-            var response = await _client.PostAsync("/IdentityInfo/BulkTrigger", content);
             var response = await _client.PostAsync("/IdentityInfo/BulkTrigger", content);
 
             if (response.StatusCode != HttpStatusCode.Redirect)

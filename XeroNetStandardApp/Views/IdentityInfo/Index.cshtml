@@ -101,4 +101,15 @@
             }
         </script>
     }
+    @if (TempData.Keys.Any(k => k.StartsWith("PollRows_")))
+    {
+        <script>
+            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
+            {
+                var tid = key.Substring("PollRows_".Length);
+                var val = TempData[key];
+                <text>localStorage.setItem('pollRows_@tid', '@val');</text>
+            }
+        </script>
+    }
 }

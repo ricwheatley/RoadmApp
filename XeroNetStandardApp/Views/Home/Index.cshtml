@@ -41,6 +41,7 @@
                         <th>Organisation</th>
                         <th>Tenant Id</th>
                         <th>Last Updated</th>
+                        <th>Rows Inserted</th>
                         <th></th>
                         <th></th>
                     </tr>
@@ -52,6 +53,7 @@
                             <td>@tenant.OrgName</td>
                             <td>@tenant.TenantId</td>
                             <td class="last-polled" data-tenant="@tenant.TenantId">—</td>
+                            <td class="last-rows" data-tenant="@tenant.TenantId">—</td>
                             <td>
                                 <a class="btn btn-primary btn-sm"
                                    asp-controller="Authorization"
@@ -89,6 +91,24 @@
             }
 
             cell.textContent = d.toLocaleString();
+        });
+
+        document.querySelectorAll('.last-rows').forEach(function (cell) {
+            var tid = cell.getAttribute('data-tenant');
+            var val = localStorage.getItem('pollRows_' + tid);
+
+            if (!val) {
+                cell.textContent = '—';
+                return;
+            }
+
+            var n = parseInt(val);
+            if (isNaN(n)) {
+                cell.textContent = '—';
+                return;
+            }
+
+            cell.textContent = n;
         });
     </script>
 }

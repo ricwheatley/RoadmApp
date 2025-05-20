@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Services
 {

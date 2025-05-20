@@ -70,13 +70,13 @@ namespace XeroNetStandardApp.Services
                     GROUP BY organisation_id
                 )
                 SELECT
-                    c.organisation_id,
-                    l.last_call,
-                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
-                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
-                    SUM(c.rows_inserted) AS records_inserted
+                    c.organisation_id   AS 'OrganisationId',
+                    l.last_call         AS 'LastCall',
+                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS 'EndpointsSuccess',
+                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS 'EndpointsFail',
+                    SUM(c.rows_inserted)                         AS 'RecordsInserted'
                 FROM utils.api_call_log c
-                JOIN last_run l 
+                JOIN last_run l
                   ON c.organisation_id = l.organisation_id
                  AND c.call_time = l.last_call
                 GROUP BY c.organisation_id, l.last_call;
@@ -96,15 +96,16 @@ namespace XeroNetStandardApp.Services
                     GROUP BY organisation_id
                 )
                 SELECT
-                    c.organisation_id,
-                    l.last_call,
-                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS endpoints_success,
-                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS endpoints_fail,
-                    SUM(c.rows_inserted) AS records_inserted
+                    c.organisation_id   AS 'OrganisationId',
+                    l.last_call         AS 'LastCall',
+                    SUM(CASE WHEN c.status_code = 200 THEN 1 ELSE 0 END) AS 'EndpointsSuccess',
+                    SUM(CASE WHEN c.status_code <> 200 THEN 1 ELSE 0 END) AS 'EndpointsFail',
+                    SUM(c.rows_inserted)                         AS 'RecordsInserted'
                 FROM utils.api_call_log c
-                JOIN last_run l 
+                JOIN last_run l
                   ON c.organisation_id = l.organisation_id
                  AND c.call_time = l.last_call
+                WHERE c.call_time = @CallTime
                 GROUP BY c.organisation_id, l.last_call;
             ";
 

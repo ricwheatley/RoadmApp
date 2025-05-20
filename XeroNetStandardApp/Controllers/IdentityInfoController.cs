@@ -85,6 +85,9 @@ namespace XeroNetStandardApp.Controllers
                 }
             };
 
+            var stats = await _pollingService.GetPollingStatsAsync();
+            model.Stats = stats.ToDictionary(s => s.OrganisationId.ToString());
+
             return View(model);
         }
 

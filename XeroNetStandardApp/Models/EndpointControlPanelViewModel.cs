@@ -6,6 +6,7 @@ namespace XeroNetStandardApp.Models
     {
         public List<OrgTenant> Tenants { get; set; } = new();
         public List<EndpointOption> Endpoints { get; set; } = new();
+        public Dictionary<string, PollingStats> Stats { get; set; } = new();
     }
 
     public class OrgTenant

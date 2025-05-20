@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Tests.Helpers
 {
@@ -14,5 +15,8 @@ namespace XeroNetStandardApp.Tests.Helpers
             Calls.Add((tenantId, endpointKey));
             return Task.FromResult(0);
         }
+
+        public Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
+            => Task.FromResult<IReadOnlyList<PollingStats>>(new List<PollingStats>());
     }
 }

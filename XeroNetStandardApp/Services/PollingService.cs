@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Xero.NetStandard.OAuth2.Token;
+using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Services
 {
@@ -57,6 +59,22 @@ namespace XeroNetStandardApp.Services
 
             _log.LogInformation("Polled {Endpoint} for tenant {Tenant}", endpointKey, tenantId);
             return rows;
+        }
+
+        public async Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
+        {
+            const string sql = @"SELECT 
+    organisation_id AS OrganisationId,
+    max(call_time) AS LastCall,
+    SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS EndpointsSuccess,
+    SUM(CASE WHEN status_code <> 200 THEN 1 ELSE 0 END) AS EndpointsFail,
+    SUM(rows_inserted) AS RecordsInserted
+FROM utils.api_call_log
+GROUP BY organisation_id;";
+
+            await using var conn = new NpgsqlConnection(_connString);
+            var result = await conn.QueryAsync<PollingStats>(sql);
+            return result.AsList();
         }
 
         private async Task LogResultAsync(string tenantId, string endpointKey, int rows, DateTimeOffset callTime, int? statusCode, bool success, string? errorMessage)

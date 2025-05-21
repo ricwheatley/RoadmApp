@@ -672,3 +672,5 @@ healthchecksdb
 *appsettings.json
 
 # End of https://www.gitignore.io/api/git,osx,rider,windows,jetbrains,aspnetcore,visualstudio,visualstudiocode
+
+XeroNetStandardApp/token.dat

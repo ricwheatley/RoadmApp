@@ -20,7 +20,7 @@
                         data-bs-toggle="collapse" data-bs-target="#detail-@i"
                         aria-expanded="false" aria-controls="detail-@i">+</button>
             </td>
-            <td>@log.CallTime.ToUniversalTime().ToString("u")</td>
+            <td>@(log.CallTime?.UtcDateTime.ToString("u") ?? "")</td>
         </tr>
         <tr>
             <td colspan="2" class="p-0">
@@ -36,3 +36,7 @@
     }
     </tbody>
 </table>
+
+@section Scripts {
+    <script src="~/js/data-load-logs.js"></script>
+}

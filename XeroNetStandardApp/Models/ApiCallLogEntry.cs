@@ -4,7 +4,7 @@ namespace XeroNetStandardApp.Models
 {
     public class ApiCallLogEntry
     {
-        public DateTimeOffset CallTime { get; set; }
+        public DateTimeOffset? CallTime { get; set; }
         public string? Endpoint { get; set; }
         public int RowsInserted { get; set; }
         public int? StatusCode { get; set; }

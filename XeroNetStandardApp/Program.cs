@@ -25,6 +25,10 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<IPollingService, PollingService>();
 builder.Services.AddScoped<ICallLogService, CallLogService>();
 builder.Services.AddScoped<IPollingSettingsService, PollingSettingsService>();
+if (builder.Configuration.GetValue<bool>("EnablePollingScheduler"))
+{
+    builder.Services.AddHostedService<PollingScheduler>();
+}
 builder.Services.AddSession();
 builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddDataProtection()

@@ -48,6 +48,18 @@ namespace XeroNetStandardApp.Services
             return list.ToDictionary(p => p.OrganisationId);
         }
 
+        public async Task<IReadOnlyList<PollingSetting>> GetAllAsync()
+        {
+            const string sql = @"SELECT organisation_id AS OrganisationId,
+                                         polling_schedule AS PollingSchedule,
+                                         run_time AS RunTime,
+                                         enabled_endpoints AS EnabledEndpoints
+                                    FROM backendutils.polling_settings;";
+            await using var conn = new NpgsqlConnection(_connString);
+            var list = await conn.QueryAsync<PollingSetting>(sql);
+            return list.AsList();
+        }
+
         public async Task UpsertAsync(Guid organisationId, string schedule, TimeSpan? runTime, IEnumerable<string> endpoints)
         {
             const string sql = @"INSERT INTO backendutils.polling_settings

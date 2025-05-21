@@ -103,19 +103,22 @@
     </table>
 </form>
 
-<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background:rgba(128,128,128,0.5);z-index:1050;">
+<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center"
+     style="background:rgba(128,128,128,0.5);z-index:1050;">
     <div class="text-center">
         <div class="spinner-border" role="status"></div>
         <div id="runProgressMessage" class="mt-2">Processing...</div>
     </div>
 </div>
 
-<div class="modal fade" id="runSummaryModal" tabindex="-1" role="dialog" aria-labelledby="runSummaryModalLabel" aria-hidden="true">
+<div class="modal fade" id="runSummaryModal" tabindex="-1" role="dialog"
+     aria-labelledby="runSummaryModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="runSummaryModalLabel">Manual Run Summary</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -129,44 +132,60 @@
 
 @section Scripts {
     <script>
-        // toggle an entire tenant column
+        // Toggle an entire tenant column
         document.querySelectorAll('.js-column-toggle')
-                .forEach(function (toggle) {
-            toggle.addEventListener('change', function () {
-                const tid = this.dataset.tenant;
-                document.querySelectorAll('.tenant-' + tid)
+            .forEach(function (toggle) {
+                toggle.addEventListener('change', function () {
+                    const tid = this.dataset.tenant;
+                    document.querySelectorAll('.tenant-' + tid)
                         .forEach(cb => cb.checked = toggle.checked);
+                });
             });
-        });
-        document.querySelector('form')?.addEventListener('submit', function () {
-            const overlay = document.getElementById('runProgress');
-            const msg = document.getElementById('runProgressMessage');
-            if (msg) msg.textContent = 'Manual data load initiated';
-            overlay?.classList.remove('d-none');
-        });
 
+        // Show the overlay immediately on form submission,
+        // then do the actual submit so the UI is updated in time
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const overlay = document.getElementById('runProgress');
+                const msg = document.getElementById('runProgressMessage');
+                if (msg) msg.textContent = 'Manual data load initiated';
+                overlay?.classList.remove('d-none');
+
+                // Short timeout so the DOM updates with the overlay before navigation
+                setTimeout(() => this.submit(), 50);
+            });
+        }
+
+        // On page load, if there's a final message in TempData, display modal
         window.addEventListener('DOMContentLoaded', function () {
             var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
             if (finalMsg) {
                 const summary = document.getElementById('runSummaryText');
-                if (summary) summary.textContent = finalMsg;
+                if (summary) {
+                    summary.textContent = finalMsg;
+                }
                 $('#runSummaryModal').modal('show');
             }
         });
-    </script>
-    @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))
-    {
-        <script>
-            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
-            {
-                    var tid = key.Substring("PollLast_".Length);
-                    var val = TempData[key];
-                    <text>localStorage.setItem('pollLast_@tid', '@val');</text>
-            }
+
+        // Store 'poll last' values from TempData in localStorage
+        @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))
+        {
+                <script>
+                    @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
+                    {
+                            var tid = key.Substring("PollLast_".Length);
+                            var val = TempData[key];
+                            <text>localStorage.setItem('pollLast_@tid', '@val');</text>
+                    }
         </script>
-    }
-    @if (TempData.Keys.Any(k => k.StartsWith("PollRows_")))
-    {
+            }
+
+            // Store 'poll rows' values from TempData in localStorage
+            @if (TempData.Keys.Any(k => k.StartsWith("PollRows_")))
+            {
         <script>
             @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
             {
@@ -175,5 +194,7 @@
                     <text>localStorage.setItem('pollRows_@tid', '@val');</text>
             }
         </script>
-    }
+            }
+
+</script>
 }

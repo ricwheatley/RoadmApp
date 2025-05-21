@@ -1,0 +1,34 @@
+@model XeroNetStandardApp.Models.ApiCallLogViewModel
+@{
+    ViewData["Title"] = "Data Load Logs";
+}
+<h2>Data Load Logs for @Model.OrgName</h2>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th style="width:2rem;"></th>
+            <th>Date/Time (UTC)</th>
+        </tr>
+    </thead>
+    <tbody>
+    @for (var i = 0; i < Model.Logs.Count; i++)
+    {
+        var log = Model.Logs[i];
+        <tr data-bs-toggle="collapse" data-bs-target="#detail-@i" style="cursor:pointer;">
+            <td class="text-center">+</td>
+            <td>@log.CallTime.ToString("g")</td>
+        </tr>
+        <tr id="detail-@i" class="collapse">
+            <td colspan="2">
+                <div>
+                    <strong>Endpoint:</strong> @log.Endpoint <br />
+                    <strong>Rows Inserted:</strong> @log.RowsInserted <br />
+                    <strong>Status Code:</strong> @log.StatusCode <br />
+                    <strong>Success:</strong> @log.Success <br />
+                    <strong>Error:</strong> @log.ErrorMessage
+                </div>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

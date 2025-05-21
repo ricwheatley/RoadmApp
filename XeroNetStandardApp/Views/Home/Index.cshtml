@@ -43,6 +43,7 @@
                         <th>Rows Inserted</th>
                         <th></th>
                         <th></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,6 +54,13 @@
                             <td>@tenant.TenantId</td>
                             <td class="last-polled" data-tenant="@tenant.TenantId">—</td>
                             <td class="last-rows" data-tenant="@tenant.TenantId">—</td>
+                            <td>
+                                <a class="btn btn-secondary btn-sm"
+                                   asp-controller="DataLoadLogs"
+                                   asp-action="Index"
+                                   asp-route-tenantId="@tenant.TenantId"
+                                   asp-route-orgName="@tenant.OrgName">Data Load Logs</a>
+                            </td>
                             <td>
                                 <a class="btn btn-primary btn-sm"
                                    asp-controller="Authorization"

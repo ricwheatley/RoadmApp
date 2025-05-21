@@ -5,6 +5,16 @@
     var tenantJson = System.Text.Json.JsonSerializer.Serialize(
         Model.Tenants.Select(t => new { t.TenantId, t.OrgName })
     );
+    var scheduleJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.Settings.ToDictionary(
+            kv => kv.Key,
+            kv => new
+            {
+                kv.Value.PollingSchedule,
+                RunTime = kv.Value.RunTime?.ToString(@"hh\:mm"),
+                kv.Value.EnabledEndpoints
+            })
+    );
 }
 
 <h2>Polling Configuration</h2>
@@ -108,6 +118,9 @@
 <script id="tenant-data" type="application/json">
     @Html.Raw(tenantJson)
 </script>
+<script id="schedule-data" type="application/json">
+    @Html.Raw(scheduleJson)
+</script>
 
 @section Scripts {
     <script type="text/javascript">
@@ -128,55 +141,30 @@
             const tenants = JSON.parse(
                 document.getElementById('tenant-data').textContent
             );
+            const schedules = JSON.parse(
+                document.getElementById('schedule-data').textContent || '{}'
+            );
 
             tenants.forEach(t => {
-                const raw = localStorage.getItem(`pollConf_${t.TenantId}`);
-                if (!raw) return;
+                const cfg = schedules[t.TenantId];
+                if (!cfg) return;
 
-                try {
-                    const cfg = JSON.parse(raw);
-
-                    (cfg.selected || []).forEach(k => {
-                        const box = document.querySelector(
-                            `.ep-checkbox[data-tenant="${t.TenantId}"][value="${k}"]`
-                        );
-                        if (box) box.checked = true;
-                    });
-
-                    const freqSel = document.querySelector(
-                        `.freq-select[data-tenant="${t.TenantId}"]`
+                (cfg.enabledEndpoints || []).forEach(k => {
+                    const box = document.querySelector(
+                        `.ep-checkbox[data-tenant="${t.TenantId}"][value="${k}"]`
                     );
-                    if (freqSel && cfg.freq) freqSel.value = cfg.freq;
-
-                    const timeInp = document.querySelector(
-                        `.time-input[data-tenant="${t.TenantId}"]`
-                    );
-                    if (timeInp && cfg.time) timeInp.value = cfg.time;
-
-                } catch { }
-            });
-
-            /* persist schedule */
-            qsa('button[name="tenantId"]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tid = btn.value;
-
-                    const freqSel = document.querySelector(
-                        `.freq-select[data-tenant="${tid}"]`
-                    );
-                    const timeInp = document.querySelector(
-                        `.time-input[data-tenant="${tid}"]`
-                    );
-
-                    const cfg = {
-                        selected: qsa(`.ep-checkbox[data-tenant="${tid}"]:checked`)
-                            .map(cb => cb.value),
-                        freq: freqSel ? freqSel.value : '',
-                        time: timeInp ? timeInp.value : ''
-                    };
-
-                    localStorage.setItem(`pollConf_${tid}`, JSON.stringify(cfg));
+                    if (box) box.checked = true;
                 });
+
+                const freqSel = document.querySelector(
+                    `.freq-select[data-tenant="${t.TenantId}"]`
+                );
+                if (freqSel && cfg.pollingSchedule) freqSel.value = cfg.pollingSchedule;
+
+                const timeInp = document.querySelector(
+                    `.time-input[data-tenant="${t.TenantId}"]`
+                );
+                if (timeInp && cfg.runTime) timeInp.value = cfg.runTime;
             });
 
         })();

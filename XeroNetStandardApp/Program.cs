@@ -1,4 +1,5 @@
-using System.IO;
+﻿using System.IO;
+using Dapper;                                       // ← added
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,9 @@ using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Enable snake_case → PascalCase mapping globally for Dapper
+DefaultTypeMap.MatchNamesWithUnderscores = true;    // ← added
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -24,7 +28,7 @@ builder.Services.AddSession();
 builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"./keys"))
-    //.ProtectKeysWithDpapi()
+    // .ProtectKeysWithDpapi()
     .SetApplicationName("RoadmApp");
 
 var app = builder.Build();

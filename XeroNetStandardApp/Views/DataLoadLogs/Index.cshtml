@@ -3,6 +3,9 @@
     ViewData["Title"] = "Data Load Logs";
 }
 <h2>Data Load Logs for @Model.OrgName</h2>
+@* ---- BEGIN full replacement block for the table & scripts ---- *@
+@using System.Linq;   <!-- needed for GroupBy / OrderBy -->
+
 <table class="table table-sm">
     <thead>
         <tr>
@@ -10,33 +13,67 @@
             <th>Date/Time (UTC)</th>
         </tr>
     </thead>
+
     <tbody>
-    @for (var i = 0; i < Model.Logs.Count; i++)
+    @{
+        // One parent row per timestamp, newest first
+        var grouped = Model.Logs
+                           .GroupBy(l => l.CallTime)          // CallTime is DateTimeOffset?
+                           .OrderByDescending(g => g.Key)
+                           .ToList();
+        var i = 0;   // unique ID counter for collapse targets
+    }
+
+    @foreach (var grp in grouped)
     {
-        var log = Model.Logs[i];
         <tr>
             <td class="text-center">
-                <button class="btn btn-link p-0" type="button"
-                        data-bs-toggle="collapse" data-bs-target="#detail-@i"
-                        aria-expanded="false" aria-controls="detail-@i">+</button>
+                <button class="btn btn-link p-0"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#detail-@i"
+                        aria-expanded="false"
+                        aria-controls="detail-@i">+</button>
             </td>
-            <td>@(log.CallTime?.UtcDateTime.ToString("u") ?? "")</td>
+            <td>@grp.Key?.UtcDateTime.ToString("dd MMM yyyy HH:mm")</td>
         </tr>
+
         <tr>
             <td colspan="2" class="p-0">
                 <div id="detail-@i" class="collapse ps-3">
-                    <strong>Endpoint:</strong> @log.Endpoint <br />
-                    <strong>Rows Inserted:</strong> @log.RowsInserted <br />
-                    <strong>Status Code:</strong> @log.StatusCode <br />
-                    <strong>Success:</strong> @log.Success <br />
-                    <strong>Error:</strong> @log.ErrorMessage
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th class="text-end">Rows</th>
+                                <th>Status</th>
+                                <th>Success</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var log in grp)
+                        {
+                            <tr>
+                                <td>@log.Endpoint</td>
+                                <td class="text-end">@log.RowsInserted</td>
+                                <td>@log.StatusCode</td>
+                                <td>@log.Success</td>
+                                <td>@log.ErrorMessage</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
                 </div>
             </td>
         </tr>
+        i++;
     }
     </tbody>
 </table>
 
-@section Scripts {
+@section Scripts
+{
     <script src="~/js/data-load-logs.js"></script>
 }
+@* ---- END replacement block ---- *@

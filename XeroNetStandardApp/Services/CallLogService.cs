@@ -15,6 +15,7 @@ namespace XeroNetStandardApp.Services
         public CallLogService(IConfiguration configuration)
         {
             _connString = configuration.GetConnectionString("Postgres")
+                         ?? Environment.GetEnvironmentVariable("POSTGRES_CONN_STRING")
                          ?? throw new InvalidOperationException("Postgres conn string missing");
         }
 

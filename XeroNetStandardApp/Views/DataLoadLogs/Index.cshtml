@@ -14,13 +14,17 @@
     @for (var i = 0; i < Model.Logs.Count; i++)
     {
         var log = Model.Logs[i];
-        <tr data-bs-toggle="collapse" data-bs-target="#detail-@i" style="cursor:pointer;">
-            <td class="text-center">+</td>
-            <td>@log.CallTime.ToString("g")</td>
+        <tr>
+            <td class="text-center">
+                <button class="btn btn-link p-0" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#detail-@i"
+                        aria-expanded="false" aria-controls="detail-@i">+</button>
+            </td>
+            <td>@log.CallTime.ToUniversalTime().ToString("u")</td>
         </tr>
-        <tr id="detail-@i" class="collapse">
-            <td colspan="2">
-                <div>
+        <tr>
+            <td colspan="2" class="p-0">
+                <div id="detail-@i" class="collapse ps-3">
                     <strong>Endpoint:</strong> @log.Endpoint <br />
                     <strong>Rows Inserted:</strong> @log.RowsInserted <br />
                     <strong>Status Code:</strong> @log.StatusCode <br />

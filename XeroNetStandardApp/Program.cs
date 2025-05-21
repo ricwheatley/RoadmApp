@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 using Xero.NetStandard.OAuth2.Config;
 using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
@@ -25,6 +26,10 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<IPollingService, PollingService>();
 builder.Services.AddScoped<ICallLogService, CallLogService>();
 builder.Services.AddScoped<IPollingSettingsService, PollingSettingsService>();
+if (builder.Configuration.GetValue<bool>("EnablePollingScheduler"))
+{
+    builder.Services.AddHostedService<PollingScheduler>();
+}
 builder.Services.AddSession();
 builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddDataProtection()

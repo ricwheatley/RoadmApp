@@ -9,6 +9,7 @@ namespace XeroNetStandardApp.Services
     {
         Task<PollingSetting?> GetAsync(Guid organisationId);
         Task<IReadOnlyDictionary<Guid, PollingSetting>> GetManyAsync(IEnumerable<Guid> organisationIds);
+        Task<IReadOnlyList<PollingSetting>> GetAllAsync();
         Task UpsertAsync(Guid organisationId, string schedule, TimeSpan? runTime, IEnumerable<string> endpoints);
     }
 }

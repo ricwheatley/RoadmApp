@@ -16,7 +16,7 @@
     }
     else
     {
-        <h5>Your Xero Organisations</h5>
+        
         <div class="mb-3">
             <a class="btn btn-secondary btn-sm me-2" asp-controller="Authorization" asp-action="Index">
                 Add Organisation
@@ -28,6 +28,7 @@
                 Scheduled Data Load
             </a>
         </div>
+        <h5>Your Xero Organisations</h5>
         @if (Model.Tenants.Count == 0)
         {
             <p>No organisations connected.</p>

@@ -26,7 +26,7 @@ namespace XeroNetStandardApp.Services
                                          polling_schedule AS PollingSchedule,
                                          run_time AS RunTime,
                                          enabled_endpoints AS EnabledEndpoints
-                                    FROM backendutils.polling_settings
+                                    FROM utils.polling_settings
                                    WHERE organisation_id = @OrgId;";
             await using var conn = new NpgsqlConnection(_connString);
             return await conn.QueryFirstOrDefaultAsync<PollingSetting>(sql, new { OrgId = organisationId });
@@ -41,7 +41,7 @@ namespace XeroNetStandardApp.Services
                                          polling_schedule AS PollingSchedule,
                                          run_time AS RunTime,
                                          enabled_endpoints AS EnabledEndpoints
-                                    FROM backendutils.polling_settings
+                                    FROM utils.polling_settings
                                    WHERE organisation_id = ANY(@OrgIds);";
             await using var conn = new NpgsqlConnection(_connString);
             var list = await conn.QueryAsync<PollingSetting>(sql, new { OrgIds = ids });
@@ -50,7 +50,7 @@ namespace XeroNetStandardApp.Services
 
         public async Task UpsertAsync(Guid organisationId, string schedule, TimeSpan? runTime, IEnumerable<string> endpoints)
         {
-            const string sql = @"INSERT INTO backendutils.polling_settings
+            const string sql = @"INSERT INTO utils.polling_settings
                                  (organisation_id, polling_schedule, run_time, enabled_endpoints)
                                  VALUES (@OrgId, @Sched, @RunTime, @Endpoints)
                                  ON CONFLICT (organisation_id)

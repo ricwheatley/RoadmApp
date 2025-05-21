@@ -149,7 +149,7 @@
                 const cfg = schedules[t.TenantId];
                 if (!cfg) return;
 
-                (cfg.enabledEndpoints || []).forEach(k => {
+                (cfg.EnabledEndpoints || []).forEach(k => {
                     const box = document.querySelector(
                         `.ep-checkbox[data-tenant="${t.TenantId}"][value="${k}"]`
                     );
@@ -159,12 +159,12 @@
                 const freqSel = document.querySelector(
                     `.freq-select[data-tenant="${t.TenantId}"]`
                 );
-                if (freqSel && cfg.pollingSchedule) freqSel.value = cfg.pollingSchedule;
+                if (freqSel && cfg.PollingSchedule) freqSel.value = cfg.PollingSchedule;
 
                 const timeInp = document.querySelector(
                     `.time-input[data-tenant="${t.TenantId}"]`
                 );
-                if (timeInp && cfg.runTime) timeInp.value = cfg.runTime;
+                if (timeInp && cfg.RunTime) timeInp.value = cfg.RunTime;
             });
 
         })();

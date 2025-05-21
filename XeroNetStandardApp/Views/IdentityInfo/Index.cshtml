@@ -103,10 +103,27 @@
     </table>
 </form>
 
-<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background:rgba(255,255,255,0.8);z-index:1050;">
+<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background:rgba(128,128,128,0.5);z-index:1050;">
     <div class="text-center">
         <div class="spinner-border" role="status"></div>
         <div id="runProgressMessage" class="mt-2">Processing...</div>
+    </div>
+</div>
+
+<div class="modal fade" id="runSummaryModal" tabindex="-1" role="dialog" aria-labelledby="runSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="runSummaryModalLabel">Manual Run Summary</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="runSummaryText"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -131,12 +148,9 @@
         window.addEventListener('DOMContentLoaded', function () {
             var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
             if (finalMsg) {
-                const overlay = document.getElementById('runProgress');
-                const msg = document.getElementById('runProgressMessage');
-                overlay.querySelector('.spinner-border')?.classList.add('d-none');
-                if (msg) msg.textContent = finalMsg;
-                overlay?.classList.remove('d-none');
-                setTimeout(() => overlay?.classList.add('d-none'), 5000);
+                const summary = document.getElementById('runSummaryText');
+                if (summary) summary.textContent = finalMsg;
+                $('#runSummaryModal').modal('show');
             }
         });
     </script>

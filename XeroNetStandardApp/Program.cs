@@ -24,6 +24,7 @@ builder.Services.AddTransient<TokenService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<IPollingService, PollingService>();
 builder.Services.AddScoped<ICallLogService, CallLogService>();
+builder.Services.AddScoped<IPollingSettingsService, PollingSettingsService>();
 builder.Services.AddSession();
 builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddDataProtection()

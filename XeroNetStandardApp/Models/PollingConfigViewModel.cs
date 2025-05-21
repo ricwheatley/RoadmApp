@@ -11,4 +11,9 @@ public class PollingConfigViewModel
     /// scheduled for polling.
     /// </summary>
     public List<EndpointOption> Endpoints { get; set; } = new();
+
+    /// <summary>
+    /// Existing polling settings keyed by organisation id.
+    /// </summary>
+    public Dictionary<string, PollingSetting> Settings { get; set; } = new();
 }

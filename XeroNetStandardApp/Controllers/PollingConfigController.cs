@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
@@ -9,14 +11,16 @@ namespace XeroNetStandardApp.Controllers;
 public class PollingConfigController : Controller
 {
     private readonly TokenService _tokenService;
+    private readonly IPollingSettingsService _settings;
 
-    public PollingConfigController(TokenService tokenService)
+    public PollingConfigController(TokenService tokenService, IPollingSettingsService settings)
     {
         _tokenService = tokenService;
+        _settings = settings;
     }
 
     // GET /PollingConfig
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         var token = _tokenService.RetrieveToken();
         if (token == null) return RedirectToAction("Index", "Authorization");
@@ -55,29 +59,52 @@ public class PollingConfigController : Controller
             new() { Key = "settings",            DisplayName = "Asset Settings" }
         };
 
-        var model = new PollingConfigViewModel
-        {
-            Tenants = token.Tenants.Select(t => new OrgTenant
+        var tenants = token.Tenants.Select(t => new OrgTenant
             {
                 TenantId = t.TenantId.ToString(),
                 OrgName = t.TenantName
-            }).ToList(),
+            }).ToList();
+
+        var model = new PollingConfigViewModel
+        {
+            Tenants = tenants,
             Endpoints = endpoints
         };
+
+        var ids = tenants
+            .Select(t => Guid.TryParse(t.TenantId, out var g) ? g : Guid.Empty)
+            .Where(g => g != Guid.Empty)
+            .ToArray();
+        var settings = await _settings.GetManyAsync(ids);
+        model.Settings = settings.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value);
 
         return View(model);
     }
 
     // POST /PollingConfig/SaveSchedule
     [HttpPost]
-    public IActionResult SaveSchedule(
+    public async Task<IActionResult> SaveSchedule(
         string tenantId,
         [FromForm] Dictionary<string, string[]> selected,
         [FromForm] Dictionary<string, string> freq,
         [FromForm] Dictionary<string, string> time)
     {
-        // TODO: Persist the schedule to a real data store.
-        // For now we simply acknowledge the request.
+        if (!Guid.TryParse(tenantId, out var orgId))
+        {
+            TempData["Message"] = "Invalid organisation id.";
+            return RedirectToAction("Index");
+        }
+
+        selected.TryGetValue(tenantId, out var endpoints);
+        freq.TryGetValue(tenantId, out var sched);
+        time.TryGetValue(tenantId, out var timeStr);
+
+        TimeSpan? runTime = null;
+        if (!string.IsNullOrWhiteSpace(timeStr) && TimeSpan.TryParse(timeStr, out var ts))
+            runTime = ts;
+
+        await _settings.UpsertAsync(orgId, sched ?? "Off", runTime, endpoints ?? Array.Empty<string>());
+
         TempData["Message"] = $"Saved schedule for {tenantId}.";
         return RedirectToAction("Index");
     }

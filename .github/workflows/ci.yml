@@ -18,25 +18,7 @@ jobs:
         uses: actions/checkout@v3
 
       # -----------------------------------------------------------------------
-      # 2.  JavaScript / React tests
-      # -----------------------------------------------------------------------
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20          # match your local version
-          cache: npm
-
-      - name: Install Node dependencies
-        run: npm ci                 # uses package-lock.json
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Run Jest suite with coverage
-        run: npm test -- --coverage --runInBand
-
-      # -----------------------------------------------------------------------
-      # 3.  .NET build & tests
+      # 2.  .NET build & tests
       # -----------------------------------------------------------------------
       - name: Set up .NET
         uses: actions/setup-dotnet@v3

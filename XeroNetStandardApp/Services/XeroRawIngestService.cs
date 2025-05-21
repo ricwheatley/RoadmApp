@@ -54,6 +54,7 @@ namespace XeroNetStandardApp.Services
             _log = log;
             _tokenService = tokenService;
             _connString = cfg.GetConnectionString("Postgres")
+                           ?? Environment.GetEnvironmentVariable("POSTGRES_CONN_STRING")
                            ?? throw new InvalidOperationException("Postgres conn string missing");
         }
 

@@ -139,6 +139,7 @@
             const overlayMessage = document.getElementById('runProgressMessage');
             const runSummaryModalEl = document.getElementById('runSummaryModal');
             const runSummaryText = document.getElementById('runSummaryText');
+            const overlayFlagKey = 'manualRunPending';
 
             // --- Overlay Control Functions ---
             function showOverlay(message = 'Processing...') {
@@ -156,6 +157,11 @@
                 }
             }
 
+            // Restore overlay state after redirect if a manual run was initiated
+            if (localStorage.getItem(overlayFlagKey) === 'true') {
+                showOverlay();
+            }
+
             // --- Column Checkbox Toggles ---
             document.querySelectorAll('.js-column-toggle').forEach(function (toggle) {
                 toggle.addEventListener('change', function () {
@@ -167,19 +173,22 @@
 
             // --- Form Submission: Show overlay immediately ---
             if (form) {
+                let alreadySubmitting = false;
                 form.addEventListener('submit', function (e) {
-                    e.preventDefault(); // Prevent default synchronous submission
+                    if (alreadySubmitting) return; // Allow actual submission on second pass
+                    e.preventDefault(); // Prevent immediate synchronous submission
+                    localStorage.setItem(overlayFlagKey, 'true');
                     showOverlay('Manual data load initiated. Please wait...');
 
                     const submitter = e.submitter; // The button that triggered the submit event
 
+                    alreadySubmitting = true;
                     // Short timeout to allow DOM update (overlay becoming visible) before form submission
                     setTimeout(() => {
                         if (submitter) {
                             form.requestSubmit(submitter); // Submits the form as if 'submitter' button was clicked
                         } else {
                             // Fallback if e.submitter is not available (e.g., form submitted via Enter key in a field)
-                            // This might not pass specific button values if needed.
                             form.submit();
                         }
                     }, 50); // 50ms delay
@@ -205,11 +214,15 @@
                 // 3. Event listener to hide overlay when modal is fully hidden
                 runSummaryModalEl.addEventListener('hidden.bs.modal', function () {
                     hideOverlay();
+                    localStorage.removeItem(overlayFlagKey);
                 }, { once: true }); // { once: true } ensures the listener is called only once
 
                 summaryModalInstance.show(); // For Bootstrap 5+
                 // If using older Bootstrap with jQuery: summaryModalInstance.modal('show');
 
+            } else {
+                // No message - ensure overlay flag is cleared
+                localStorage.removeItem(overlayFlagKey);
             }
 
             // --- LocalStorage for polling data (existing code) ---

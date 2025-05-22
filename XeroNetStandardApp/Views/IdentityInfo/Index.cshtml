@@ -132,9 +132,32 @@
 
 @section Scripts {
     <script>
-        // Toggle an entire tenant column
-        document.querySelectorAll('.js-column-toggle')
-            .forEach(function (toggle) {
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM Elements ---
+            const form = document.querySelector('form[asp-action="BulkTrigger"]'); // Target your specific form
+            const overlay = document.getElementById('runProgress');
+            const overlayMessage = document.getElementById('runProgressMessage');
+            const runSummaryModalEl = document.getElementById('runSummaryModal');
+            const runSummaryText = document.getElementById('runSummaryText');
+
+            // --- Overlay Control Functions ---
+            function showOverlay(message = 'Processing...') {
+                if (overlayMessage) {
+                    overlayMessage.textContent = message;
+                }
+                if (overlay) {
+                    overlay.classList.remove('d-none');
+                }
+            }
+
+            function hideOverlay() {
+                if (overlay) {
+                    overlay.classList.add('d-none');
+                }
+            }
+
+            // --- Column Checkbox Toggles ---
+            document.querySelectorAll('.js-column-toggle').forEach(function (toggle) {
                 toggle.addEventListener('change', function () {
                     const tid = this.dataset.tenant;
                     document.querySelectorAll('.tenant-' + tid)
@@ -142,59 +165,74 @@
                 });
             });
 
-        // Show the overlay immediately on form submission,
-        // then do the actual submit so the UI is updated in time
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const overlay = document.getElementById('runProgress');
-                const msg = document.getElementById('runProgressMessage');
-                if (msg) msg.textContent = 'Manual data load initiated';
-                overlay?.classList.remove('d-none');
+            // --- Form Submission: Show overlay immediately ---
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault(); // Prevent default synchronous submission
+                    showOverlay('Manual data load initiated. Please wait...');
 
-                // Short timeout so the DOM updates with the overlay before navigation
-                setTimeout(() => this.submit(), 50);
-            });
-        }
+                    const submitter = e.submitter; // The button that triggered the submit event
 
-        // On page load, if there's a final message in TempData, display modal
-        window.addEventListener('DOMContentLoaded', function () {
-            var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
-            if (finalMsg) {
-                const summary = document.getElementById('runSummaryText');
-                if (summary) {
-                    summary.textContent = finalMsg;
-                }
-                $('#runSummaryModal').modal('show');
+                    // Short timeout to allow DOM update (overlay becoming visible) before form submission
+                    setTimeout(() => {
+                        if (submitter) {
+                            form.requestSubmit(submitter); // Submits the form as if 'submitter' button was clicked
+                        } else {
+                            // Fallback if e.submitter is not available (e.g., form submitted via Enter key in a field)
+                            // This might not pass specific button values if needed.
+                            form.submit();
+                        }
+                    }, 50); // 50ms delay
+                });
             }
-        });
 
-        // Store 'poll last' values from TempData in localStorage
-        @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))
-        {
-                <script>
+            // --- Page Load: Handle RunStatus from TempData, show modal, and manage overlay ---
+            var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
+            // This will set finalMsg to the string from TempData["RunStatus"], or null if not set.
+
+            if (finalMsg && runSummaryModalEl) { // If there's a message and the modal element exists
+                // 1. An operation has completed. Show the overlay first.
+                showOverlay('Loading summary...');
+
+                // 2. Populate and show the modal
+                if (runSummaryText) {
+                    runSummaryText.textContent = finalMsg;
+                }
+
+                var summaryModalInstance = new bootstrap.Modal(runSummaryModalEl); // Assumes Bootstrap 5+ syntax
+                // If using older Bootstrap with jQuery: var summaryModalInstance = $('#runSummaryModal');
+
+                // 3. Event listener to hide overlay when modal is fully hidden
+                runSummaryModalEl.addEventListener('hidden.bs.modal', function () {
+                    hideOverlay();
+                }, { once: true }); // { once: true } ensures the listener is called only once
+
+                summaryModalInstance.show(); // For Bootstrap 5+
+                // If using older Bootstrap with jQuery: summaryModalInstance.modal('show');
+
+            }
+
+            // --- LocalStorage for polling data (existing code) ---
+            @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))
+            {
                     @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
                     {
                             var tid = key.Substring("PollLast_".Length);
                             var val = TempData[key];
-                            <text>localStorage.setItem('pollLast_@tid', '@val');</text>
+                            // Use Json.Serialize for robust JavaScript string/object creation
+                            <text>localStorage.setItem('pollLast_@tid', @Json.Serialize(val));</text>
                     }
-        </script>
             }
 
-            // Store 'poll rows' values from TempData in localStorage
             @if (TempData.Keys.Any(k => k.StartsWith("PollRows_")))
             {
-        <script>
-            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
-            {
-                    var tid = key.Substring("PollRows_".Length);
-                    var val = TempData[key];
-                    <text>localStorage.setItem('pollRows_@tid', '@val');</text>
+                    @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
+                    {
+                            var tid = key.Substring("PollRows_".Length);
+                            var val = TempData[key];
+                            <text>localStorage.setItem('pollRows_@tid', @Json.Serialize(val));</text>
+                    }
             }
-        </script>
-            }
-
-</script>
+        });
+    </script>
 }

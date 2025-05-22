@@ -29,8 +29,8 @@ namespace XeroNetStandardApp.Tests
             var content = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string,string>("tenantId", "123"),
-                new KeyValuePair<string,string>("selected[123][]", "accounts"),
-                new KeyValuePair<string,string>("selected[123][]", "invoices")
+                new KeyValuePair<string,string>("selected[123]", "accounts"),
+                new KeyValuePair<string,string>("selected[123]", "invoices")
             });
 
             var response = await _client.PostAsync("/IdentityInfo/BulkTrigger", content);

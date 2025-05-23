@@ -37,6 +37,7 @@ a {
         text-decoration: underline;
         text-underline-offset: 4px;
         text-shadow: 0 0 8px #fff, 0 0 15px #6bb6ff;
+        border-bottom: 3px solid #ffe066;
         opacity: 1;
     }
 

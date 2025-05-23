@@ -136,6 +136,7 @@
             const overlayMessage = document.getElementById('runProgressMessage');
             const runSummaryModalEl = document.getElementById('runSummaryModal');
             const runSummaryText = document.getElementById('runSummaryText');
+            const overlayFlagKey = 'manualRunPending';
 
             function showOverlay(message = 'Processing...') {
                 if (overlayMessage) overlayMessage.textContent = message;
@@ -155,6 +156,7 @@
             });
 
             if (form) {
+                let alreadySubmitting = false;
                 form.addEventListener('submit', function (e) {
                     e.preventDefault();
                     showOverlay('Manual data load initiated. Please wait...');

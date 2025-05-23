@@ -1,12 +1,19 @@
 using System.Linq;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Tests.Helpers;   // <- makes the stub visible
 
 namespace XeroNetStandardApp.Tests.Helpers
 {
-    public class TestApiFactory : WebApplicationFactory<Program>
+    /// <summary>
+    /// Creates an in-memory test host with stubbed services and a
+    /// no-op IAntiforgery implementation so that ValidateAntiForgeryToken
+    /// never causes HTTP 400 responses in integration tests.
+    /// </summary>
+    public sealed class TestApiFactory : WebApplicationFactory<Program>
     {
         public StubPollingService StubPolling { get; } = new();
 
@@ -14,21 +21,38 @@ namespace XeroNetStandardApp.Tests.Helpers
         {
             builder.ConfigureServices(services =>
             {
-                // Replace IPollingService with stub
-                var pollingDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IPollingService));
-                if (pollingDescriptor != null)
+                /* ---------- Replace IPollingService with stub ---------- */
+                var pollingDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IPollingService));
+
+                if (pollingDescriptor is not null)
                 {
                     services.Remove(pollingDescriptor);
                 }
+
                 services.AddSingleton<IPollingService>(StubPolling);
 
-                // Replace TokenService with fake
-                var tokenDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(TokenService));
-                if (tokenDescriptor != null)
+                /* ---------- Replace TokenService with fake ---------- */
+                var tokenDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(TokenService));
+
+                if (tokenDescriptor is not null)
                 {
                     services.Remove(tokenDescriptor);
                 }
+
                 services.AddSingleton<TokenService, FakeTokenService>();
+
+                /* ---------- Stub IAntiforgery so ValidateAntiForgeryToken passes ---------- */
+                var antiDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IAntiforgery));
+
+                if (antiDescriptor is not null)
+                {
+                    services.Remove(antiDescriptor);
+                }
+
+                services.AddSingleton<IAntiforgery, TestAntiforgery>();
             });
         }
     }

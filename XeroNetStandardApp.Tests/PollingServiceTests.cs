@@ -38,7 +38,12 @@ namespace XeroNetStandardApp.Tests
             });
 
             var cfg = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                .AddInMemoryCollection(new[] { new System.Collections.Generic.KeyValuePair<string,string>("ConnectionStrings:Postgres", "Host=localhost") })
+                .AddInMemoryCollection(new[]
+                {
+                    new System.Collections.Generic.KeyValuePair<string, string?>(
+                        "ConnectionStrings:Postgres",
+                        "Host=localhost")
+                })
                 .Build();
 
             var svc = new PollingService(tokenService, raw, NullLogger<PollingService>.Instance, cfg);

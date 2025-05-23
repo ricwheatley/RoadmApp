@@ -17,103 +17,108 @@
     );
 }
 
-<h2>Polling Configuration</h2>
-
-<!-- view-specific CSS -->
+<!-- Scoped style for this page -->
 <style>
-    /* shared width + centred horizontally */
     .sched-control {
-        width: 8rem; /* adjust as needed */
-        display: block; /* makes margin centring reliable */
-        margin-left: auto;
-        margin-right: auto;
+        width: 8rem;
     }
 </style>
 
-<form asp-action="SaveSchedule" method="post">
-    <table class="table table-sm table-striped">
-        <thead>
-            <tr>
-                <th></th>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">@tenant.OrgName</th>
-                }
-            </tr>
-            <tr>
-                <th></th>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        <button type="submit"
-                                name="tenantId"
-                                value="@tenant.TenantId"
-                                class="btn btn-primary btn-sm sched-control">
-                            Save&nbsp;Schedule
-                        </button>
-                    </th>
-                }
-            </tr>
-            <tr>
-                <th></th>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        <input type="checkbox"
-                               class="js-column-toggle"
-                               data-tenant="@tenant.TenantId" />
-                        <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
-                    </th>
-                }
-            </tr>
-            <tr>
-                <th>Frequency</th>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        <select class="form-select form-select-sm freq-select sched-control"
-                                data-tenant="@tenant.TenantId"
-                                name="freq[@tenant.TenantId]">
-                            <option>Off</option>
-                            <option>Daily</option>
-                            <option>Weekly</option>
-                        </select>
-                    </th>
-                }
-            </tr>
-            <tr>
-                <th>Time</th>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        <input type="time"
-                               class="form-control form-control-sm time-input sched-control"
-                               data-tenant="@tenant.TenantId"
-                               name="time[@tenant.TenantId]" />
-                    </th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var ep in Model.Endpoints)
-            {
-                <tr>
-                    <td>@ep.DisplayName</td>
-                    @foreach (var tenant in Model.Tenants)
-                    {
-                        <td class="text-center">
-                            <input type="checkbox"
-                                   class="ep-checkbox"
-                                   data-tenant="@tenant.TenantId"
-                                   value="@ep.Key"
-                                   name="selected[@tenant.TenantId]" />
-                        </td>
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
-</form>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Polling Configuration</h5>
+
+        <form asp-action="SaveSchedule" method="post">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th></th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">@tenant.OrgName</th>
+                            }
+                        </tr>
+                        <tr>
+                            <th></th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <button type="submit"
+                                            name="tenantId"
+                                            value="@tenant.TenantId"
+                                            class="btn btn-primary btn-sm sched-control">
+                                        Save Schedule
+                                    </button>
+                                </th>
+                            }
+                        </tr>
+                        <tr>
+                            <th></th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <input type="checkbox"
+                                           class="js-column-toggle"
+                                           data-tenant="@tenant.TenantId" />
+                                    <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
+                                </th>
+                            }
+                        </tr>
+                        <tr>
+                            <th>Frequency</th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <select class="form-select form-select-sm sched-control"
+                                            data-tenant="@tenant.TenantId"
+                                            name="freq[@tenant.TenantId]">
+                                        <option>Off</option>
+                                        <option>Daily</option>
+                                        <option>Weekly</option>
+                                    </select>
+                                </th>
+                            }
+                        </tr>
+                        <tr>
+                            <th>Time</th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <div class="d-flex justify-content-center">
+                                        <input type="time"
+                                               class="form-control form-control-sm sched-control"
+                                               data-tenant="@tenant.TenantId"
+                                               name="time[@tenant.TenantId]" />
+                                    </div>
+
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ep in Model.Endpoints)
+                        {
+                            <tr>
+                                <td>@ep.DisplayName</td>
+                                @foreach (var tenant in Model.Tenants)
+                                {
+                                    <td class="text-center">
+                                        <input type="checkbox"
+                                               class="form-check-input ep-checkbox"
+                                               data-tenant="@tenant.TenantId"
+                                               value="@ep.Key"
+                                               name="selected[@tenant.TenantId]" />
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script id="tenant-data" type="application/json">
     @Html.Raw(tenantJson)
@@ -124,11 +129,9 @@
 
 @section Scripts {
     <script type="text/javascript">
-        // ts-nocheck
         (() => {
             const qsa = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
-            /* column toggle */
             qsa('.js-column-toggle').forEach(toggle => {
                 toggle.addEventListener('change', () => {
                     const tid = toggle.dataset.tenant;
@@ -137,36 +140,24 @@
                 });
             });
 
-            /* hydrate UI */
-            const tenants = JSON.parse(
-                document.getElementById('tenant-data').textContent
-            );
-            const schedules = JSON.parse(
-                document.getElementById('schedule-data').textContent || '{}'
-            );
+            const tenants = JSON.parse(document.getElementById('tenant-data').textContent);
+            const schedules = JSON.parse(document.getElementById('schedule-data').textContent || '{}');
 
             tenants.forEach(t => {
                 const cfg = schedules[t.TenantId];
                 if (!cfg) return;
 
                 (cfg.EnabledEndpoints || []).forEach(k => {
-                    const box = document.querySelector(
-                        `.ep-checkbox[data-tenant="${t.TenantId}"][value="${k}"]`
-                    );
+                    const box = document.querySelector(`.ep-checkbox[data-tenant="${t.TenantId}"][value="${k}"]`);
                     if (box) box.checked = true;
                 });
 
-                const freqSel = document.querySelector(
-                    `.freq-select[data-tenant="${t.TenantId}"]`
-                );
+                const freqSel = document.querySelector(`.freq-select[data-tenant="${t.TenantId}"]`);
                 if (freqSel && cfg.PollingSchedule) freqSel.value = cfg.PollingSchedule;
 
-                const timeInp = document.querySelector(
-                    `.time-input[data-tenant="${t.TenantId}"]`
-                );
+                const timeInp = document.querySelector(`.time-input[data-tenant="${t.TenantId}"]`);
                 if (timeInp && cfg.RunTime) timeInp.value = cfg.RunTime;
             });
-
         })();
     </script>
 }

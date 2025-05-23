@@ -1,37 +1,90 @@
-﻿<!DOCTYPE html>
+﻿@* ~/Views/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RoadmApp</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/sky-navbar.css" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
+    <header class="mb-4 shadow-sm">
+        <nav class="navbar navbar-expand-sm navbar-light navbar-sky border-bottom">
+            <div class="container d-flex justify-content-between align-items-center w-100">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.png" alt="RoadmApp" height="40">
+                    <img src="~/images/cloudlogo2.png" alt="RoadmApp logo" height="48" />
                 </a>
-                <!-- navigation items removed -->
+
+                <ul class="navbar-nav flex-grow-1 justify-content-center">
+                    <li class="nav-item px-3">
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")"
+                           asp-controller="Home" asp-action="Index">
+                            Connected Organisations
+                        </a>
+                    </li>
+                    <li class="nav-item px-3">
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "IdentityInfo" ? "active" : "")"
+                           asp-controller="IdentityInfo" asp-action="Index">
+                            Manual Load
+                        </a>
+                    </li>
+                    <li class="nav-item px-3">
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PollingConfig" ? "active" : "")"
+                           asp-controller="PollingConfig" asp-action="Index">
+                            Scheduled Load
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
+
+
+    </header>
+
+    <main class="container pb-4">
+        @RenderBody()
+    </main>
+
+    <footer class="footer mt-auto border-top text-muted py-3">
+        <div class="container text-center">
             &copy; @DateTime.Now.Year - RoadmApp
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
+    <script>
+        function applyTheme(theme) {
+            document.body.classList.remove('light-mode', 'dark-mode');
+            document.body.classList.add(theme + '-mode');
+            localStorage.setItem('preferredTheme', theme);
+        }
+
+        function toggleTheme() {
+            const current = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('preferredTheme') || 'light';
+            applyTheme(stored);
+
+            const btn = document.getElementById('themeToggleBtn');
+            btn.addEventListener('click', toggleTheme);
+        });
+    </script>
+
 </body>
 </html>

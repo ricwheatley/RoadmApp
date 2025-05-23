@@ -1,146 +1,105 @@
 @model XeroNetStandardApp.Models.HomeIndexViewModel
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Connected Organisations";
 }
 
-<div>
-    @if (!Model.IsConnected)
-    {
-        <p>No Xero organisation connected.</p>
-        <p>
-            <button onclick="location.href='@Url.Action("Index", "Authorization")'">
-                Connect to Xero
-            </button>
-        </p>
-    }
-    else
-    {
-        
-        <div class="mb-3">
-            <a class="btn btn-secondary btn-sm me-2" asp-controller="Authorization" asp-action="Index">
-                Add Organisation
-            </a>
-            <a class="btn btn-secondary btn-sm me-2" asp-controller="IdentityInfo" asp-action="Index">
-                Manual Data Load
-            </a>
-            <a class="btn btn-secondary btn-sm" asp-controller="PollingConfig" asp-action="Index">
-                Scheduled Data Load
-            </a>
-        </div>
-        <h5>Your Xero Organisations</h5>
-        @if (Model.Tenants.Count == 0)
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (!Model.IsConnected)
         {
-            <p>No organisations connected.</p>
+            <h5 class="card-title">No Xero organisation connected</h5>
+            <p class="card-text">You can connect an organisation to begin loading data.</p>
+            <a class="btn btn-primary" href="@Url.Action("Index", "Authorization")">Connect to Xero</a>
         }
         else
         {
-            <table class="table table-striped table-sm">
-                <thead>
-                    <tr>
-                        <th>Organisation</th>
-                        <th>Tenant Id</th>
-                        <th>Last Updated</th>
-                        <th>Rows Inserted</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var tenant in Model.Tenants)
-                    {
-                        <tr>
-                            <td>@tenant.OrgName</td>
-                            <td>@tenant.TenantId</td>
-                            <td class="last-polled" data-tenant="@tenant.TenantId">—</td>
-                            <td class="last-rows" data-tenant="@tenant.TenantId">—</td>
-                            <td>
-                                <a class="btn btn-secondary btn-sm"
-                                   asp-controller="DataLoadLogs"
-                                   asp-action="Index"
-                                   asp-route-tenantId="@tenant.TenantId"
-                                   asp-route-orgName="@tenant.OrgName">Data Load Logs</a>
-                            </td>
-                            <td>
-                                <a class="btn btn-primary btn-sm"
-                                   asp-controller="Authorization"
-                                   asp-action="Index">Reauthorise</a>
-                            </td>
-                            <td>
-                                <a class="btn btn-danger btn-sm"
-                                   asp-controller="Authorization"
-                                   asp-action="Disconnect"
-                                   asp-route-tenantId="@tenant.TenantId">Disconnect</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <h5 class="mb-3">Your Xero Organisations</h5>
+
+            @if (Model.Tenants.Count == 0)
+            {
+                <p class="text-muted">No organisations connected.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Organisation</th>
+                                <th>Tenant ID</th>
+                                <th>Last Updated</th>
+                                <th>Rows Inserted</th>
+                                <th colspan="3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <tr>
+                                    <td>@tenant.OrgName</td>
+                                    <td class="text-monospace">@tenant.TenantId</td>
+                                    <td class="last-polled" data-tenant="@tenant.TenantId">—</td>
+                                    <td class="last-rows" data-tenant="@tenant.TenantId">—</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           asp-controller="DataLoadLogs"
+                                           asp-action="Index"
+                                           asp-route-tenantId="@tenant.TenantId"
+                                           asp-route-orgName="@tenant.OrgName">Logs</a>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-controller="Authorization"
+                                           asp-action="Index">Reauthorise</a>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-danger"
+                                           asp-controller="Authorization"
+                                           asp-action="Disconnect"
+                                           asp-route-tenantId="@tenant.TenantId">Disconnect</a>
+                                    </td>
+                                </tr>
+                            }
+
+                            <tr>
+                                <td colspan="4" class="text-muted text-end pe-3">
+                                    
+                                </td>
+                                <td></td>
+                                <td>
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       asp-controller="Authorization"
+                                       asp-action="Index">
+                                        Add New
+                                    </a>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            }
         }
-    }
+    </div>
 </div>
 
 @section Scripts {
     <script>
         function updateTenantInfo() {
-            console.log('Starting script execution');
-
             document.querySelectorAll('.last-polled').forEach(function (cell) {
-                var tid = cell.getAttribute('data-tenant');
-                console.log('Processing last-polled cell for tenant ID:', tid);
-
-                var val = localStorage.getItem('pollLast_' + tid);
-                console.log('Retrieved value from local storage:', val);
-
-                if (!val) {
-                    console.log('No value found in local storage, setting text to "Not updated yet"');
-                    cell.textContent = 'Not updated yet';
-                    return;
-                }
-
-                var d = new Date(parseInt(val, 10));
-                console.log('Parsed date:', d);
-
-                if (isNaN(d.getTime())) {
-                    console.log('Invalid date, setting text to "Not updated yet"');
-                    cell.textContent = 'Not updated yet';
-                    return;
-                }
-
-                console.log('Setting text to:', d.toLocaleString());
-                cell.textContent = d.toLocaleString();
+                const tid = cell.dataset.tenant;
+                const val = localStorage.getItem('pollLast_' + tid);
+                const date = val ? new Date(parseInt(val, 10)) : null;
+                cell.textContent = date && !isNaN(date) ? date.toLocaleString() : 'Not updated yet';
             });
-
-            console.log('Finished processing last-polled cells');
 
             document.querySelectorAll('.last-rows').forEach(function (cell) {
-                var tid = cell.getAttribute('data-tenant');
-                console.log('Processing last-rows cell for tenant ID:', tid);
-
-                var val = localStorage.getItem('pollRows_' + tid);
-                console.log('Retrieved value from local storage:', val);
-
-                if (!val) {
-                    console.log('No value found in local storage, setting text to "—"');
-                    cell.textContent = '—';
-                    return;
-                }
-
-                var n = parseInt(val, 10);
-                console.log('Parsed integer value:', n);
-
-                if (isNaN(n)) {
-                    console.log('Invalid integer value, setting text to "—"');
-                    cell.textContent = '—';
-                    return;
-                }
-
-                console.log('Setting text to:', n);
-                cell.textContent = n;
+                const tid = cell.dataset.tenant;
+                const val = localStorage.getItem('pollRows_' + tid);
+                const rows = parseInt(val, 10);
+                cell.textContent = !isNaN(rows) ? rows : '—';
             });
-
-            console.log('Finished script execution');
         }
 
         if (document.readyState === 'loading') {

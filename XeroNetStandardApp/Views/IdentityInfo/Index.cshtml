@@ -4,127 +4,125 @@
     ViewBag.Title = "Endpoint Control Panel";
 }
 
-<h3>Last Run Summary</h3>
-<table class="table table-sm">
-    <thead>
-        <tr>
-            <th>Organisation</th>
-            <th>Last Call (UTC)</th>
-            <th>Successes</th>
-            <th>Failures</th>
-            <th>Rows Inserted</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model.Tenants)
-        {
-            if (Model.Stats.TryGetValue(t.TenantId!, out var s))
-            {
-                <tr>
-                    <td>@t.OrgName</td>
-                    <td>@s.LastCall.ToString("g")</td>
-                    <td>@s.EndpointsSuccess</td>
-                    <td>@s.EndpointsFail</td>
-                    <td>@s.RecordsInserted</td>
-                </tr>
-            }
-        }
-    </tbody>
-</table>
-
-<h2>Endpoint Control Panel</h2>
-
-<form asp-action="BulkTrigger" method="post">
-    <table class="table table-sm table-striped">
-        <thead>
-            <tr>
-                <th>Endpoint</th>
-                @* one header cell per tenant *@
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        @tenant.OrgName
-                    </th>
-                }
-            </tr>
-            <tr>
-                <th>
-                    <button type="submit"
-                            name="tenantId"
-                            value="ALL"
-                            class="btn btn-success">
-                        Run&nbsp;All&nbsp;Organisations
-                    </button>
-                </th>
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        <button type="submit"
-                                name="tenantId"
-                                value="@tenant.TenantId"
-                                class="btn btn-primary btn-sm">
-                            Run&nbsp;Selected
-                        </button>
-                    </th>
-                }
-            </tr>
-            <tr>
-                <th></th>
-                @* “select all / none” toggle for each column *@
-                @foreach (var tenant in Model.Tenants)
-                {
-                    <th class="text-center">
-                        <input type="checkbox"
-                               class="js-column-toggle"
-                               data-tenant="@tenant.TenantId" />
-                        <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
-                    </th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @* grid: row = endpoint, column = tenant *@
-            @foreach (var endpoint in Model.Endpoints)
-            {
-                <tr>
-                    <td>@endpoint.DisplayName</td>
-                    @foreach (var tenant in Model.Tenants)
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Last Run Summary</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Organisation</th>
+                        <th>Last Call (UTC)</th>
+                        <th>Successes</th>
+                        <th>Failures</th>
+                        <th>Rows Inserted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Tenants)
                     {
-                        <td class="text-center">
-                            <input type="checkbox"
-                                   name="selected[@tenant.TenantId]"
-                                   value="@endpoint.Key"
-                                   class="ep-checkbox tenant-@tenant.TenantId" />
-                        </td>
+                        if (Model.Stats.TryGetValue(t.TenantId!, out var s))
+                        {
+                            <tr>
+                                <td>@t.OrgName</td>
+                                <td>@s.LastCall.ToString("g")</td>
+                                <td>@s.EndpointsSuccess</td>
+                                <td>@s.EndpointsFail</td>
+                                <td>@s.RecordsInserted</td>
+                            </tr>
+                        }
                     }
-                </tr>
-            }
-        </tbody>
-    </table>
-</form>
-
-<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center"
-     style="background:rgba(128,128,128,0.5);z-index:1050;">
-    <div class="text-center">
-        <div class="spinner-border" role="status"></div>
-        <div id="runProgressMessage" class="mt-2">Processing...</div>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="modal fade" id="runSummaryModal" tabindex="-1" role="dialog"
-     aria-labelledby="runSummaryModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Manual Endpoint Trigger</h5>
+        <form asp-action="BulkTrigger" method="post">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th></th> <!-- Was "Endpoint", now empty -->
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">@tenant.OrgName</th>
+                            }
+                        </tr>
+                        <tr>
+                            <th>
+                                <button type="submit" name="tenantId" value="ALL" class="btn btn-success btn-sm">
+                                    Run All
+                                </button>
+                            </th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <button type="submit" name="tenantId" value="@tenant.TenantId" class="btn btn-primary btn-sm">
+                                        Run Selected
+                                    </button>
+                                </th>
+                            }
+                        </tr>
+                        <tr>
+                            <th>Endpoint</th> <!-- Moved here -->
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <input type="checkbox"
+                                           class="js-column-toggle"
+                                           data-tenant="@tenant.TenantId" />
+                                    <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var endpoint in Model.Endpoints)
+                        {
+                            <tr>
+                                <td>@endpoint.DisplayName</td>
+                                @foreach (var tenant in Model.Tenants)
+                                {
+                                    <td class="text-center">
+                                        <input type="checkbox"
+                                               name="selected[@tenant.TenantId]"
+                                               value="@endpoint.Key"
+                                               class="form-check-input ep-checkbox tenant-@tenant.TenantId" />
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Progress Overlay -->
+<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center bg-dark bg-opacity-50" style="z-index: 1050;">
+    <div class="text-center">
+        <div class="spinner-border text-light" role="status"></div>
+        <div id="runProgressMessage" class="mt-2 text-light">Processing...</div>
+    </div>
+</div>
+
+<!-- Summary Modal -->
+<div class="modal fade" id="runSummaryModal" tabindex="-1" aria-labelledby="runSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
             <div class="modal-header">
                 <h5 class="modal-title" id="runSummaryModalLabel">Manual Run Summary</h5>
-                <button type="button" class="close" data-dismiss="modal"
-                        aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="runSummaryText"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -133,31 +131,22 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- DOM Elements ---
-            const form = document.querySelector('form[asp-action="BulkTrigger"]'); // Target your specific form
+            const form = document.querySelector('form[asp-action="BulkTrigger"]');
             const overlay = document.getElementById('runProgress');
             const overlayMessage = document.getElementById('runProgressMessage');
             const runSummaryModalEl = document.getElementById('runSummaryModal');
             const runSummaryText = document.getElementById('runSummaryText');
 
-            // --- Overlay Control Functions ---
             function showOverlay(message = 'Processing...') {
-                if (overlayMessage) {
-                    overlayMessage.textContent = message;
-                }
-                if (overlay) {
-                    overlay.classList.remove('d-none');
-                }
+                if (overlayMessage) overlayMessage.textContent = message;
+                if (overlay) overlay.classList.remove('d-none');
             }
 
             function hideOverlay() {
-                if (overlay) {
-                    overlay.classList.add('d-none');
-                }
+                if (overlay) overlay.classList.add('d-none');
             }
 
-            // --- Column Checkbox Toggles ---
-            document.querySelectorAll('.js-column-toggle').forEach(function (toggle) {
+            document.querySelectorAll('.js-column-toggle').forEach(toggle => {
                 toggle.addEventListener('change', function () {
                     const tid = this.dataset.tenant;
                     document.querySelectorAll('.tenant-' + tid)
@@ -165,73 +154,41 @@
                 });
             });
 
-            // --- Form Submission: Show overlay immediately ---
             if (form) {
                 form.addEventListener('submit', function (e) {
-                    e.preventDefault(); // Prevent default synchronous submission
+                    e.preventDefault();
                     showOverlay('Manual data load initiated. Please wait...');
-
-                    const submitter = e.submitter; // The button that triggered the submit event
-
-                    // Short timeout to allow DOM update (overlay becoming visible) before form submission
                     setTimeout(() => {
-                        if (submitter) {
-                            form.requestSubmit(submitter); // Submits the form as if 'submitter' button was clicked
+                        if (e.submitter) {
+                            form.requestSubmit(e.submitter);
                         } else {
-                            // Fallback if e.submitter is not available (e.g., form submitted via Enter key in a field)
-                            // This might not pass specific button values if needed.
                             form.submit();
                         }
-                    }, 50); // 50ms delay
+                    }, 50);
                 });
             }
 
-            // --- Page Load: Handle RunStatus from TempData, show modal, and manage overlay ---
             var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
-            // This will set finalMsg to the string from TempData["RunStatus"], or null if not set.
-
-            if (finalMsg && runSummaryModalEl) { // If there's a message and the modal element exists
-                // 1. An operation has completed. Show the overlay first.
+            if (finalMsg && runSummaryModalEl) {
                 showOverlay('Loading summary...');
-
-                // 2. Populate and show the modal
-                if (runSummaryText) {
-                    runSummaryText.textContent = finalMsg;
-                }
-
-                var summaryModalInstance = new bootstrap.Modal(runSummaryModalEl); // Assumes Bootstrap 5+ syntax
-                // If using older Bootstrap with jQuery: var summaryModalInstance = $('#runSummaryModal');
-
-                // 3. Event listener to hide overlay when modal is fully hidden
-                runSummaryModalEl.addEventListener('hidden.bs.modal', function () {
-                    hideOverlay();
-                }, { once: true }); // { once: true } ensures the listener is called only once
-
-                summaryModalInstance.show(); // For Bootstrap 5+
-                // If using older Bootstrap with jQuery: summaryModalInstance.modal('show');
-
+                if (runSummaryText) runSummaryText.textContent = finalMsg;
+                var summaryModalInstance = new bootstrap.Modal(runSummaryModalEl);
+                runSummaryModalEl.addEventListener('hidden.bs.modal', () => hideOverlay(), { once: true });
+                summaryModalInstance.show();
             }
 
-            // --- LocalStorage for polling data (existing code) ---
-            @if (TempData.Keys.Any(k => k.StartsWith("PollLast_")))
+            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
             {
-                    @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
-                    {
-                            var tid = key.Substring("PollLast_".Length);
-                            var val = TempData[key];
-                            // Use Json.Serialize for robust JavaScript string/object creation
-                            <text>localStorage.setItem('pollLast_@tid', @Json.Serialize(val));</text>
-                    }
+                    var tid = key.Substring("PollLast_".Length);
+                    var val = TempData[key];
+                    <text>localStorage.setItem('pollLast_@tid', @Json.Serialize(val));</text>
             }
 
-            @if (TempData.Keys.Any(k => k.StartsWith("PollRows_")))
+            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
             {
-                    @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
-                    {
-                            var tid = key.Substring("PollRows_".Length);
-                            var val = TempData[key];
-                            <text>localStorage.setItem('pollRows_@tid', @Json.Serialize(val));</text>
-                    }
+                    var tid = key.Substring("PollRows_".Length);
+                    var val = TempData[key];
+                    <text>localStorage.setItem('pollRows_@tid', @Json.Serialize(val));</text>
             }
         });
     </script>

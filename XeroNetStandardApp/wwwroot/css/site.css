@@ -13,7 +13,7 @@ a {
 }
 /* Selected Navbar page */
 .navbar-sky .navbar-nav .nav-link {
-    font-size: 1.12rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #fff !important;
     text-transform: none;
@@ -34,7 +34,8 @@ a {
     .navbar-sky .navbar-nav .nav-link.active:focus {
         color: #fff !important;
         font-weight: 900;
-        border-bottom: 3px solid #fff;
+        text-decoration: underline;
+        text-underline-offset: 4px;
         text-shadow: 0 0 8px #fff, 0 0 15px #6bb6ff;
         opacity: 1;
     }
@@ -151,7 +152,7 @@ body.dark-mode {
 }
 /* --- FORCE NAVBAR LINK STYLE --- */
 .navbar-sky .navbar-nav .nav-item .nav-link {
-    font-size: 1.14rem !important;
+    font-size: 1.25rem !important;
     font-weight: 800 !important;
     color: #fff !important;
     text-transform: none !important;
@@ -166,7 +167,8 @@ body.dark-mode {
     .navbar-sky .navbar-nav .nav-item .nav-link.active:focus {
         color: #fff !important;
         font-weight: 900 !important;
-        border-bottom: 4px solid #fff !important;
+        text-decoration: underline !important;
+        text-underline-offset: 6px !important;
         text-shadow: 0 0 8px #fff, 0 0 15px #6bb6ff !important;
         background: none !important;
     }

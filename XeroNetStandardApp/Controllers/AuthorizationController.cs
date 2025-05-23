@@ -86,7 +86,7 @@ namespace XeroNetStandardApp.Controllers
         public async Task<IActionResult> Disconnect([FromQuery] string tenantId)
         {
             var token = await GetValidXeroTokenAsync();
-            if (token == null || token.Tenants?.Count == 0)
+            if (token == null || token.Tenants == null || token.Tenants.Count == 0)
                 return BadRequest("No connected Xero organisation to disconnect.");
 
             var tenant = token.Tenants.FirstOrDefault(t =>

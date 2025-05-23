@@ -175,7 +175,7 @@ namespace XeroNetStandardApp.Services
                                  ? endpoint.Status
                                  : new[] { (string?)null };
 
-                foreach (var status in statusList)
+                foreach (var status in statusList ?? Array.Empty<string?>())
                     rows += await IngestForOneStatusAsync(http, conn, endpoint, tenantId, table, status, since);
             }
             catch (Exception ex)

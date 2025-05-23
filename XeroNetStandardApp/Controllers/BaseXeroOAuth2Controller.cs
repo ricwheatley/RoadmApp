@@ -105,6 +105,11 @@ namespace XeroNetStandardApp.Controllers
             {
                 // Double-check in case another request refreshed while we waited
                 token = _tokenService.RetrieveToken();
+                if (token == null)
+                {
+                    _logger.LogWarning("Token disappeared during refresh attempt.");
+                    return null;
+                }
                 expiryCutoffUtc = token.ExpiresAtUtc - _expiryBuffer;
                 if (DateTime.UtcNow < expiryCutoffUtc)
                 {

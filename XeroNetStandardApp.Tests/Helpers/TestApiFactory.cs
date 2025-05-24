@@ -1,17 +1,20 @@
+// XeroNetStandardApp.Tests/Helpers/TestApiFactory.cs
 using System.Linq;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using XeroNetStandardApp.Services;
-using XeroNetStandardApp.Tests.Helpers;   // <- makes the stub visible
+using XeroNetStandardApp.Tests.Helpers;
+using XeroNetStandardApp.Models;
+
 
 namespace XeroNetStandardApp.Tests.Helpers
 {
     /// <summary>
-    /// Creates an in-memory test host with stubbed services and a
-    /// no-op IAntiforgery implementation so that ValidateAntiForgeryToken
-    /// never causes HTTP 400 responses in integration tests.
+    /// Creates an in-memory test host with stubbed services,
+    /// including a fake ICallLogService so the test suite never
+    /// asks for a Postgres connection string.
     /// </summary>
     public sealed class TestApiFactory : WebApplicationFactory<Program>
     {
@@ -42,6 +45,17 @@ namespace XeroNetStandardApp.Tests.Helpers
                 }
 
                 services.AddSingleton<TokenService, FakeTokenService>();
+
+                /* ---------- Replace ICallLogService with fake ---------- */
+                var callLogDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(ICallLogService));
+
+                if (callLogDescriptor is not null)
+                {
+                    services.Remove(callLogDescriptor);
+                }
+
+                services.AddSingleton<ICallLogService, FakeCallLogService>();
 
                 /* ---------- Stub IAntiforgery so ValidateAntiForgeryToken passes ---------- */
                 var antiDescriptor = services.SingleOrDefault(

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace XeroNetStandardApp.Models
 {
@@ -17,6 +18,8 @@ namespace XeroNetStandardApp.Models
 
         public string GetScheduleFor(string endpointKey) =>
             Schedules.TryGetValue(endpointKey, out var val) ? val : "—";
+        public DateTimeOffset? LastCallUtc { get; set; }
+        public int? LastRowsInserted { get; set; }
     }
 
     public class EndpointOption

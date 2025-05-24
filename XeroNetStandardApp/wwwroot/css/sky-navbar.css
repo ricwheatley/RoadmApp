@@ -15,8 +15,26 @@
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
     }
 
-    .navbar-sky .navbar-brand,
-    .navbar-sky .nav-link,
-    .navbar-sky .navbar-text {
+    .navbar-sky .nav-link {
         color: #fff !important;
+        font-size: 1.1rem;
+        font-weight: 400;
+        position: relative;
+        padding-bottom: 0.7rem;
+        text-align: center; /* Ensure center alignment */
+        /* Remove horizontal padding if you want the underline to match exactly, e.g.: */
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
     }
+
+        .navbar-sky .nav-link.active {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+
+
+        .navbar-sky .nav-link.active {
+            /* Remove text-decoration underline in case it's still showing */
+            text-decoration: none;
+        }

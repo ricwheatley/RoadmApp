@@ -7,15 +7,16 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <h5 class="card-title">Last Run Summary</h5>
+
         <div class="table-responsive">
             <table class="table table-sm table-striped table-bordered align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Organisation</th>
-                        <th>Last Call (UTC)</th>
+                        <th>Last&nbsp;Call</th>
                         <th>Successes</th>
                         <th>Failures</th>
-                        <th>Rows Inserted</th>
+                        <th>Rows&nbsp;Inserted</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,7 +26,10 @@
                         {
                             <tr>
                                 <td>@t.OrgName</td>
-                                <td>@s.LastCall.ToString("g")</td>
+                                <td class="last-run"
+                                    data-timestamp="@s.LastCall.ToUniversalTime()
+                                                                    .ToString(" yyyy-MM-dd'T'HH:mm:ss.fff'Z'")">
+                                </td>
                                 <td>@s.EndpointsSuccess</td>
                                 <td>@s.EndpointsFail</td>
                                 <td>@s.RecordsInserted</td>
@@ -41,12 +45,13 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <h5 class="card-title mb-3">Manual Endpoint Trigger</h5>
+
         <form asp-action="BulkTrigger" method="post">
             <div class="table-responsive">
                 <table class="table table-sm table-striped table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th></th> <!-- Was "Endpoint", now empty -->
+                            <th></th>
                             @foreach (var tenant in Model.Tenants)
                             {
                                 <th class="text-center">@tenant.OrgName</th>
@@ -68,7 +73,7 @@
                             }
                         </tr>
                         <tr>
-                            <th>Endpoint</th> <!-- Moved here -->
+                            <th>Endpoint</th>
                             @foreach (var tenant in Model.Tenants)
                             {
                                 <th class="text-center">
@@ -80,7 +85,6 @@
                             }
                         </tr>
                     </thead>
-
                     <tbody>
                         @foreach (var endpoint in Model.Endpoints)
                         {
@@ -104,15 +108,17 @@
     </div>
 </div>
 
-<!-- Progress Overlay -->
-<div id="runProgress" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center bg-dark bg-opacity-50" style="z-index: 1050;">
+<!-- Progress overlay -->
+<div id="runProgress"
+     class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center bg-dark bg-opacity-50"
+     style="z-index: 1050;">
     <div class="text-center">
         <div class="spinner-border text-light" role="status"></div>
         <div id="runProgressMessage" class="mt-2 text-light">Processing...</div>
     </div>
 </div>
 
-<!-- Summary Modal -->
+<!-- Summary modal -->
 <div class="modal fade" id="runSummaryModal" tabindex="-1" aria-labelledby="runSummaryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow">
@@ -130,68 +136,43 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('form[asp-action="BulkTrigger"]');
-            const overlay = document.getElementById('runProgress');
-            const overlayMessage = document.getElementById('runProgressMessage');
-            const runSummaryModalEl = document.getElementById('runSummaryModal');
-            const runSummaryText = document.getElementById('runSummaryText');
-            const overlayFlagKey = 'manualRunPending';
-
-            function showOverlay(message = 'Processing...') {
-                if (overlayMessage) overlayMessage.textContent = message;
-                if (overlay) overlay.classList.remove('d-none');
-            }
-
-            function hideOverlay() {
-                if (overlay) overlay.classList.add('d-none');
-            }
-
+        document.addEventListener('DOMContentLoaded', () => {
+            // ----- column toggles -----
             document.querySelectorAll('.js-column-toggle').forEach(toggle => {
-                toggle.addEventListener('change', function () {
-                    const tid = this.dataset.tenant;
+                toggle.addEventListener('change', () => {
+                    const tid = toggle.dataset.tenant;
                     document.querySelectorAll('.tenant-' + tid)
-                        .forEach(cb => cb.checked = toggle.checked);
+                            .forEach(cb => cb.checked = toggle.checked);
                 });
             });
 
-            if (form) {
-                let alreadySubmitting = false;
-                form.addEventListener('submit', function (e) {
+            // ----- overlay handling -----
+            const form       = document.querySelector('form[asp-action="BulkTrigger"]');
+            const overlay    = document.getElementById('runProgress');
+            const msgBox     = document.getElementById('runProgressMessage');
+            function showOverlay(m = 'Processing…') { msgBox.textContent = m; overlay.classList.remove('d-none'); }
+            function hideOverlay()                   { overlay.classList.add('d-none'); }
+
+            if (form)
+                form.addEventListener('submit', e => {
                     e.preventDefault();
-                    showOverlay('Manual data load initiated. Please wait...');
-                    setTimeout(() => {
-                        if (e.submitter) {
-                            form.requestSubmit(e.submitter);
-                        } else {
-                            form.submit();
-                        }
-                    }, 50);
+                    showOverlay('Manual data load initiated. Please wait…');
+                    setTimeout(() => form.requestSubmit ? form.requestSubmit(e.submitter) : form.submit(), 50);
                 });
+
+            // ----- run-summary modal -----
+            const finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
+            if (finalMsg) {
+                showOverlay('Loading summary…');
+                document.getElementById('runSummaryText').textContent = finalMsg;
+                const m = new bootstrap.Modal('#runSummaryModal');
+                document.getElementById('runSummaryModal')
+                        .addEventListener('hidden.bs.modal', hideOverlay, { once: true });
+                m.show();
             }
 
-            var finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
-            if (finalMsg && runSummaryModalEl) {
-                showOverlay('Loading summary...');
-                if (runSummaryText) runSummaryText.textContent = finalMsg;
-                var summaryModalInstance = new bootstrap.Modal(runSummaryModalEl);
-                runSummaryModalEl.addEventListener('hidden.bs.modal', () => hideOverlay(), { once: true });
-                summaryModalInstance.show();
-            }
-
-            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollLast_")))
-            {
-                    var tid = key.Substring("PollLast_".Length);
-                    var val = TempData[key];
-                    <text>localStorage.setItem('pollLast_@tid', @Json.Serialize(val));</text>
-            }
-
-            @foreach (var key in TempData.Keys.Where(k => k.StartsWith("PollRows_")))
-            {
-                    var tid = key.Substring("PollRows_".Length);
-                    var val = TempData[key];
-                    <text>localStorage.setItem('pollRows_@tid', @Json.Serialize(val));</text>
-            }
+            // ----- time formatting -----
+            if (typeof formatIsoDates === 'function') formatIsoDates('.last-run');
         });
     </script>
 }

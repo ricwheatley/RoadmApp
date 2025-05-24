@@ -100,19 +100,26 @@ namespace XeroNetStandardApp.Controllers
 
             model.Stats = filteredStats;
 
-            var missingTenantIds = model.Tenants
-                .Where(t => !string.IsNullOrWhiteSpace(t.TenantId) &&
-                            !model.Stats.ContainsKey(t.TenantId!))
+            // Pull the latest call time for all tenants so the summary table
+            // matches the data shown on other pages.
+            var allTenantIds = model.Tenants
+                .Where(t => !string.IsNullOrWhiteSpace(t.TenantId))
                 .Select(t => Guid.Parse(t.TenantId!))
                 .ToList();
 
-            if (missingTenantIds.Count > 0)
+            if (allTenantIds.Count > 0)
             {
-                var latest = await _callLogs.GetLatestStatsAsync(missingTenantIds);
+                var latest = await _callLogs.GetLatestStatsAsync(allTenantIds);
                 foreach (var kv in latest)
                 {
                     var tid = kv.Key.ToString();
-                    if (!model.Stats.ContainsKey(tid))
+                    if (model.Stats.TryGetValue(tid, out var s))
+                    {
+                        s.LastCall = kv.Value.LastCallUtc;
+                        if (s.RecordsInserted == 0)
+                            s.RecordsInserted = kv.Value.RowsInserted;
+                    }
+                    else
                     {
                         model.Stats[tid] = new PollingStats
                         {
@@ -126,7 +133,7 @@ namespace XeroNetStandardApp.Controllers
                 }
             }
 
-            foreach (var stat in filteredStats)
+            foreach (var stat in model.Stats)
             {
                 _log.LogInformation(
                     "Model has org {org} last run {dt} success {succ} fail {fail} rows {rows}",

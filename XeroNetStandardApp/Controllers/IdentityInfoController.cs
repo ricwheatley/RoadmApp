@@ -20,17 +20,20 @@ namespace XeroNetStandardApp.Controllers
     public class IdentityInfo : ApiAccessorController<IdentityApi>
     {
         private readonly IPollingService _pollingService;
+        private readonly ICallLogService _callLogs;
         private readonly ILogger<IdentityInfo> _log;
 
         public IdentityInfo(
             IOptions<XeroConfiguration> xeroConfig,
             TokenService tokenService,
             IPollingService pollingService,
+            ICallLogService callLogs,
             ILogger<BaseXeroOAuth2Controller> baseLogger,
             ILogger<IdentityInfo> log)
             : base(xeroConfig, tokenService, baseLogger)
         {
             _pollingService = pollingService;
+            _callLogs = callLogs;
             _log = log;
         }
 
@@ -96,6 +99,32 @@ namespace XeroNetStandardApp.Controllers
                 .ToDictionary(s => s.OrganisationId.ToString());
 
             model.Stats = filteredStats;
+
+            var missingTenantIds = model.Tenants
+                .Where(t => !string.IsNullOrWhiteSpace(t.TenantId) &&
+                            !model.Stats.ContainsKey(t.TenantId!))
+                .Select(t => Guid.Parse(t.TenantId!))
+                .ToList();
+
+            if (missingTenantIds.Count > 0)
+            {
+                var latest = await _callLogs.GetLatestStatsAsync(missingTenantIds);
+                foreach (var kv in latest)
+                {
+                    var tid = kv.Key.ToString();
+                    if (!model.Stats.ContainsKey(tid))
+                    {
+                        model.Stats[tid] = new PollingStats
+                        {
+                            OrganisationId   = kv.Key,
+                            LastCall         = kv.Value.LastCallUtc,
+                            EndpointsSuccess = 0,
+                            EndpointsFail    = 0,
+                            RecordsInserted  = kv.Value.RowsInserted
+                        };
+                    }
+                }
+            }
 
             foreach (var stat in filteredStats)
             {

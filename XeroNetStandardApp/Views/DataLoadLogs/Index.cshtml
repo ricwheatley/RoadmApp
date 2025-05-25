@@ -1,31 +1,31 @@
 @model XeroNetStandardApp.Models.ApiCallLogViewModel
+@using System.Linq
 @{
     ViewData["Title"] = "Data Load Logs";
 }
+
 <h2>Data Load Logs for @Model.OrgName</h2>
-@* ---- BEGIN full replacement block for the table & scripts ---- *@
-@using System.Linq;   <!-- needed for GroupBy / OrderBy -->
 
 <table class="table table-sm">
     <thead>
         <tr>
             <th style="width:2rem;"></th>
-            <th>Date/Time (UTC)</th>
+            <th>Date/Time</th>
         </tr>
     </thead>
 
     <tbody>
     @{
-        // One parent row per timestamp, newest first
         var grouped = Model.Logs
-                           .GroupBy(l => l.CallTime)          // CallTime is DateTimeOffset?
+                           .GroupBy(l => l.CallTime)
                            .OrderByDescending(g => g.Key)
                            .ToList();
-        var i = 0;   // unique ID counter for collapse targets
+        var i = 0;
     }
 
     @foreach (var grp in grouped)
     {
+        var id = i++;
         <tr>
             <td class="text-center">
                 <button class="btn btn-link p-0"
@@ -35,7 +35,13 @@
                         aria-expanded="false"
                         aria-controls="detail-@i">+</button>
             </td>
-            <td>@grp.Key?.UtcDateTime.ToString("dd MMM yyyy HH:mm")</td>
+
+            <!-- give JS the raw ISO timestamp -->
+            <td class="call-time"
+    data-timestamp="@(grp.Key.HasValue
+        ? grp.Key.Value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")
+        : "")">
+</td>
         </tr>
 
         <tr>
@@ -67,13 +73,21 @@
                 </div>
             </td>
         </tr>
-        i++;
     }
     </tbody>
 </table>
 
-@section Scripts
-{
+@section Scripts {
     <script src="~/js/data-load-logs.js"></script>
+
+    <script>
+        if (typeof formatIsoDates === 'function') {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded',
+                    () => formatIsoDates('.call-time'));
+            } else {
+                formatIsoDates('.call-time');
+            }
+        }
+    </script>
 }
-@* ---- END replacement block ---- *@

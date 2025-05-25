@@ -58,7 +58,7 @@
                             @foreach (var tenant in Model.Tenants)
                             {
                                 <th class="text-center">
-                                    <select class="form-select form-select-sm sched-control"
+                                    <select class="form-select form-select-sm sched-control freq-select"
                                             data-tenant="@tenant.TenantId"
                                             name="freq[@tenant.TenantId]">
                                         <option>Off</option>
@@ -75,7 +75,7 @@
                                 <th class="text-center">
                                     <div class="d-flex justify-content-center">
                                         <input type="time"
-                                               class="form-control form-control-sm sched-control"
+                                               class="form-control form-control-sm sched-control time-input"
                                                data-tenant="@tenant.TenantId"
                                                name="time[@tenant.TenantId]" />
                                     </div>
@@ -84,7 +84,7 @@
                             }
                         </tr>
                         <tr>
-                            <th></th>
+                            <th>Endpoint</th>
                             @foreach (var tenant in Model.Tenants)
                             {
                                 <th class="text-center">

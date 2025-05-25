@@ -54,18 +54,6 @@
                             }
                         </tr>
                         <tr>
-                            <th></th>
-                            @foreach (var tenant in Model.Tenants)
-                            {
-                                <th class="text-center">
-                                    <input type="checkbox"
-                                           class="js-column-toggle"
-                                           data-tenant="@tenant.TenantId" />
-                                    <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
-                                </th>
-                            }
-                        </tr>
-                        <tr>
                             <th>Frequency</th>
                             @foreach (var tenant in Model.Tenants)
                             {
@@ -92,6 +80,18 @@
                                                name="time[@tenant.TenantId]" />
                                     </div>
 
+                                </th>
+                            }
+                        </tr>
+                        <tr>
+                            <th></th>
+                            @foreach (var tenant in Model.Tenants)
+                            {
+                                <th class="text-center">
+                                    <input type="checkbox"
+                                           class="js-column-toggle"
+                                           data-tenant="@tenant.TenantId" />
+                                    <small>Select&nbsp;All&nbsp;/&nbsp;None</small>
                                 </th>
                             }
                         </tr>

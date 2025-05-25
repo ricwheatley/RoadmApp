@@ -38,11 +38,7 @@
                                 <tr>
                                     <td>@t.OrgName</td>
                                     <td class="text-monospace">@t.TenantId</td>
-                                    <td class="last-run"
-                                        data-timestamp="@(t.LastCallUtc.HasValue
-                                                                                                    ? t.LastCallUtc.Value.ToUniversalTime()
-                                                                                                          .ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")
-                                                                                        : "")">
+                                    <td class="last-run"data-timestamp="@(t.LastCallUtc.HasValue? t.LastCallUtc.Value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'"): "")">
                         </td>
                         <td class="text-end">@t.LastRowsInserted</td>
                         <td>
@@ -66,6 +62,29 @@
                     </tr>
                                         }
                         </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <!-- blank cells for the first five columns -->
+                                <td></td>  @* Organisation *@
+                                <td></td>  @* Tenant ID *@
+                                <td></td>  @* Last Updated *@
+                                <td></td>  @* Rows Inserted *@
+                                <td></td>  @* Logs column *@
+
+                                <!-- Reauthorise column: our Add-New button -->
+                                <td class="text-center">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       asp-controller="Authorization"
+                                       asp-action="Connect"
+                                       asp-route-returnUrl="@Url.Action("Index", "Home")">
+                                        + Add New
+                                    </a>
+                                </td>
+
+                                <!-- keep a final empty cell so the Disconnect column lines up -->
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             }

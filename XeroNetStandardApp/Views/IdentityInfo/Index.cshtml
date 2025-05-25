@@ -26,13 +26,15 @@
                         {
                             <tr>
                                 <td>@t.OrgName</td>
+
                                 <td class="last-run"
-                                    data-timestamp="@s.LastCall.ToUniversalTime()
-                                                                    .ToString(" yyyy-MM-dd'T'HH:mm:ss.fff'Z'")">
+                                    data-tenant="@t.TenantId"
+                                    data-timestamp="@s.LastCall.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")">
                                 </td>
+
                                 <td>@s.EndpointsSuccess</td>
                                 <td>@s.EndpointsFail</td>
-                                <td>@s.RecordsInserted</td>
+                                <td>@s.RecordsInserted.ToString("N0")</td>
                             </tr>
                         }
                     }

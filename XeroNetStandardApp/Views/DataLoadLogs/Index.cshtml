@@ -11,6 +11,9 @@
         <tr>
             <th style="width:2rem;"></th>
             <th>Date/Time</th>
+            <th class="text-end">Endpoints</th>
+            <th class="text-end">Successes</th>
+            <th class="text-end">Failures</th>
         </tr>
     </thead>
 
@@ -26,6 +29,10 @@
     @foreach (var grp in grouped)
     {
         var id = i++;
+        var endpoints = grp.Count();
+        var successes = grp.Count(l => l.Success);
+        var failures  = grp.Count() - successes;
+        
         <tr>
             <td class="text-center">
                 <button class="btn btn-link p-0"
@@ -38,14 +45,18 @@
 
             <!-- give JS the raw ISO timestamp -->
             <td class="call-time"
-    data-timestamp="@(grp.Key.HasValue
-        ? grp.Key.Value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")
-        : "")">
-</td>
+                data-timestamp="@(grp.Key.HasValue
+                    ? grp.Key.Value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")
+                    : "")">
+            </td>
+
+            <td class="text-end">@endpoints</td>
+            <td class="text-end text-success">@successes</td>
+            <td class="text-end text-danger">@failures</td>
         </tr>
 
         <tr>
-            <td colspan="2" class="p-0">
+            <td colspan="5" class="p-0">
                 <div id="detail-@i" class="collapse ps-3">
                     <table class="table table-sm mb-0">
                         <thead>

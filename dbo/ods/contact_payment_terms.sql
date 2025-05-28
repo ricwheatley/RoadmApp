@@ -1,0 +1,103 @@
+-- =============================================================
+--  ODS SCD‑2 DDL SCRIPT – Xero ContactPaymentTerms
+--  File generated: 28‑May‑2025
+-- =============================================================
+
+/* ----------------------------------------------------------------
+   0.  ENUM TYPE (ensure exists – shared across ODS)                */
+CREATE TYPE IF NOT EXISTS ods.record_status_enum AS ENUM (
+    'ACTIVE',
+    'SUPERSEDED',
+    'ARCHIVED',
+    'REMOVED'
+);
+
+/* ----------------------------------------------------------------
+   1.  Audit helper function (idempotent – shared)                  */
+CREATE OR REPLACE FUNCTION fn_update_row_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.row_updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+/* ----------------------------------------------------------------
+   2.  ODS.CONTACT_PAYMENT_TERMS  (child of ods.contacts)
+       Maps the PaymentTerms object (Bills / Sales) for a contact.
+       Source fields per Xero schema: Bills.Day, Bills.Type; Sales.Day, Sales.Type fileciteturn8file0
+------------------------------------------------------------------ */
+CREATE TABLE IF NOT EXISTS ods.contact_payment_terms (
+    -- Business / natural key (one term per side per contact)
+    contact_id   UUID         NOT NULL,              -- Parent ContactID
+    term_side    VARCHAR(10)  NOT NULL,              -- 'BILLS' or 'SALES'
+
+    -- Core scalar attributes mapped from PaymentTerm.Bill object
+    payment_day  INTEGER,                            -- Day of month (0‑31)
+    term_type    VARCHAR(30),                        -- DAYSAFTERBILLDATE, OFCURRENTMONTH, etc.
+
+    -- SCD‑2 columns
+    surrogate_key   SERIAL PRIMARY KEY,
+    valid_from      TIMESTAMPTZ NOT NULL,
+    valid_to        TIMESTAMPTZ NOT NULL DEFAULT '9999-12-31 23:59:59.999999+00',
+    is_current      BOOLEAN     NOT NULL DEFAULT TRUE,
+
+    -- Tenant / organisation
+    organisation_id UUID        NOT NULL,
+
+    -- Audit & status
+    fetched_at       TIMESTAMPTZ NOT NULL,
+    row_created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    row_updated_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    record_status    ods.record_status_enum NOT NULL DEFAULT 'ACTIVE',
+
+    -- Batch / source tracking
+    batch_id                  UUID        NOT NULL,
+    landing_table_name        VARCHAR(255) NOT NULL,
+    landing_record_identifier VARCHAR(512) NOT NULL,
+    raw_table_name            VARCHAR(255),
+    api_call_id               UUID,
+    source_system_id          VARCHAR(100),
+    source_record_modified_at TIMESTAMPTZ,
+
+    -- Constraints
+    CONSTRAINT uq_contact_payment_terms_business_key_current
+        UNIQUE (contact_id, term_side, is_current) WHERE is_current,
+
+    CONSTRAINT ck_contact_payment_terms_record_status
+        CHECK (record_status IN ('ACTIVE','SUPERSEDED','ARCHIVED','REMOVED')),
+
+    CONSTRAINT ck_contact_payment_terms_valid_dates
+        CHECK (valid_from < valid_to),
+
+    CONSTRAINT fk_contact_payment_terms_organisation
+        FOREIGN KEY (organisation_id)
+        REFERENCES ods.organisations(organisation_id)
+);
+
+-- Indexes for ods.contact_payment_terms
+CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_business_key_current
+    ON ods.contact_payment_terms(contact_id, term_side) WHERE is_current;
+CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_valid_to
+    ON ods.contact_payment_terms(valid_to);
+CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_is_current
+    ON ods.contact_payment_terms(is_current);
+CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_fetched_at
+    ON ods.contact_payment_terms(fetched_at);
+CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_batch_id
+    ON ods.contact_payment_terms(batch_id);
+CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_organisation_id
+    ON ods.contact_payment_terms(organisation_id);
+
+-- Row‑updated‑at trigger for ods.contact_payment_terms
+CREATE TRIGGER trg_update_contact_payment_terms_row_updated_at
+BEFORE UPDATE ON ods.contact_payment_terms
+FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+
+/* ----------------------------------------------------------------
+   3.  Documentation                                                */
+COMMENT ON TABLE ods.contact_payment_terms IS 'Type‑2 SCD table storing historical payment‑term settings (Bills & Sales) for a Xero Contact.';
+COMMENT ON COLUMN ods.contact_payment_terms.contact_id IS 'Parent Xero ContactID.';
+COMMENT ON COLUMN ods.contact_payment_terms.term_side IS 'Specifies whether the term applies to BILLS or SALES side.';
+COMMENT ON COLUMN ods.contact_payment_terms.payment_day IS 'Day of month (0‑31) on which payment is due.';
+COMMENT ON COLUMN ods.contact_payment_terms.term_type IS 'Payment term type enumeration (DAYSAFTERBILLDATE, OFCURRENTMONTH, etc.).';

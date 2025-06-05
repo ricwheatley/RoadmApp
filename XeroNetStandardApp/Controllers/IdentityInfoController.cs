@@ -13,6 +13,7 @@ using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Config;
 using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Helpers;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -52,7 +53,7 @@ namespace XeroNetStandardApp.Controllers
                     TenantId = c.TenantId.ToString(),
                     OrgName = c.TenantName,
                     Schedules = new Dictionary<string, string>(), // populated later
-                    Scopes = token.Scopes?.ToList() ?? new List<string>()
+                    Scopes = token.GetScopes()
                 }).ToList(),
 
                 Endpoints = new List<EndpointOption>

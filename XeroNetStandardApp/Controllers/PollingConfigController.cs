@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Helpers;
 
 namespace XeroNetStandardApp.Controllers;
 
@@ -63,7 +64,7 @@ public class PollingConfigController : Controller
             {
                 TenantId = t.TenantId.ToString(),
                 OrgName = t.TenantName,
-                Scopes = token.Scopes?.ToList() ?? new List<string>()
+                Scopes = token.GetScopes()
         }).ToList();
 
         var model = new PollingConfigViewModel

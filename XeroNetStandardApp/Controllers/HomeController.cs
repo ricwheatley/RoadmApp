@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Helpers;
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -43,7 +44,7 @@ namespace XeroNetStandardApp.Controllers
                     {
                         TenantId = t.TenantId.ToString(),
                         OrgName = t.TenantName,
-                        Scopes = token.Scopes?.ToList() ?? new List<string>()
+                        Scopes = token.GetScopes()
                     });
                 }
             }

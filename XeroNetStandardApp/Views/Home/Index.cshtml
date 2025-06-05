@@ -139,7 +139,7 @@
                 formatIsoDates('.last-run');
             }
         }
-        document.addEventListener('DOMContentLoaded', () => {
+        function attachScopeHandlers() {
             document.querySelectorAll('.js-show-scopes').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const scopes = btn.dataset.scopes || '';
@@ -148,6 +148,12 @@
                     m.show();
                 });
             });
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachScopeHandlers);
+        } else {
+            attachScopeHandlers();
+        }
     </script>
 }

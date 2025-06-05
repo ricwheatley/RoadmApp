@@ -126,11 +126,13 @@
         <div class="modal-content shadow">
             <div class="modal-header">
                 <h5 class="modal-title" id="runSummaryModalLabel">Manual Run Summary</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body" id="runSummaryText"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -167,10 +169,9 @@
             if (finalMsg) {
                 showOverlay('Loading summary…');
                 document.getElementById('runSummaryText').textContent = finalMsg;
-                const m = new bootstrap.Modal('#runSummaryModal');
-                document.getElementById('runSummaryModal')
-                        .addEventListener('hidden.bs.modal', hideOverlay, { once: true });
-                m.show();
+                const m = $("#runSummaryModal");
+                m.one("hidden.bs.modal", hideOverlay);
+                m.modal("show");
             }
 
             // ----- time formatting -----

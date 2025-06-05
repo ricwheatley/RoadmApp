@@ -32,7 +32,7 @@
                                 <th>Last&nbsp;Updated</th>
                                 <th>Rows&nbsp;Inserted</th>
                                 <th colspan="3">Actions</th>
-                                <th colspan="4">Actions</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,11 +120,13 @@
         <div class="modal-content shadow">
             <div class="modal-header">
                 <h5 class="modal-title" id="scopesModalLabel">Authorised Scopes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body" id="scopesModalBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -142,11 +144,17 @@
         function attachScopeHandlers() {
             document.querySelectorAll('.js-show-scopes').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const scopes = btn.dataset.scopes || '';
-                    document.getElementById('scopesModalBody').textContent = scopes;
-                    const modalElem = document.getElementById('scopesModal');
-                    const m = new bootstrap.Modal(modalElem);
-                    m.show();
+                    const scopes = (btn.dataset.scopes || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(s => s);
+                    const body = document.getElementById('scopesModalBody');
+                    if (scopes.length) {
+                        body.innerHTML = '<ul><li>' + scopes.join('</li><li>') + '</li></ul>';
+                    } else {
+                        body.textContent = '';
+                    }
+                    $('#scopesModal').modal('show');
                 });
             });
         }

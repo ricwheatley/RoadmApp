@@ -13,10 +13,10 @@ function initDataLoadLogs() {
     if (!table) return;
 
     table.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-bs-toggle="collapse"]');
+        const btn = e.target.closest('[data-bs-toggle="collapse"],[data-toggle="collapse"]');
         if (!btn) return;
 
-        const targetSel = btn.getAttribute('data-bs-target');
+        const targetSel = btn.getAttribute('data-bs-target') || btn.getAttribute('data-target');
         const target = document.querySelector(targetSel);
         if (!target) return;
 

@@ -120,7 +120,7 @@ CREATE INDEX IF NOT EXISTS idx_cn_payments_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_cn_payments_row_updated_at
 BEFORE UPDATE ON ods.credit_note_payments
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.credit_note_payments IS 'Payments applied to credit notes, captured as Type‑2 slowly‑changing dimensions.';

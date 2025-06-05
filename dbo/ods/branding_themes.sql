@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_branding_themes_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_branding_themes_row_updated_at
 BEFORE UPDATE ON ods.branding_themes
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.branding_themes IS 'Branding theme definitions used on invoices and other documents, stored as a Type‑2 Slowly Changing Dimension.';

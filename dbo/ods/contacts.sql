@@ -108,7 +108,7 @@ CREATE INDEX IF NOT EXISTS idx_contacts_organisation_id
 
 /* ----------------------------------------------------------------
    4.  Audit trigger                                              */
-CREATE OR REPLACE FUNCTION fn_update_row_updated_at()
+CREATE OR REPLACE FUNCTION ods.fn_update_row_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.row_updated_at := CURRENT_TIMESTAMP;
@@ -118,7 +118,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER trg_update_contacts_row_updated_at
 BEFORE UPDATE ON ods.contacts
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* ----------------------------------------------------------------
    5.  Comments                                                   */

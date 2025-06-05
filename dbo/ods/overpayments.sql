@@ -97,7 +97,7 @@ CREATE INDEX IF NOT EXISTS idx_overpayments_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_overpayments_row_updated_at
 BEFORE UPDATE ON ods.overpayments
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.overpayments IS 'Overpayments issued or received, stored as Type‑2 slowly changing dimension rows.';

@@ -122,7 +122,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_invoices_row_updated_at
 BEFORE UPDATE ON ods.invoices
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ---------------------------------------- */
 COMMENT ON TABLE ods.invoices IS 'Sales invoices and purchase bills stored as Type‑2 slowly‑changing dimensions (one row per version).';

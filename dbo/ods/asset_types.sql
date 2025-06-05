@@ -102,7 +102,7 @@ CREATE INDEX IF NOT EXISTS idx_asset_types_organisation_id
 /* --- Trigger to maintain row_updated_at ---------------------- */
 CREATE TRIGGER trg_update_asset_types_row_updated_at
 BEFORE UPDATE ON ods.asset_types
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------ */
 COMMENT ON TABLE ods.asset_types IS 'Catalogue of fixed‑asset types for an organisation, stored as a Type‑2 slowly‑changing dimension.';

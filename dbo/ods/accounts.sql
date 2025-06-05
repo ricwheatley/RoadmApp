@@ -60,13 +60,7 @@ CREATE TABLE IF NOT EXISTS ods.accounts (
     source_system_id          VARCHAR(100),
     source_record_modified_at TIMESTAMPTZ,
 
-    /* --- Constraints ------------------------------------------- */
-    CONSTRAINT uq_accounts_business_key_current
-        UNIQUE (account_id, is_current) WHERE is_current,
 
-    CONSTRAINT fk_accounts_organisation
-        FOREIGN KEY (organisation_id)
-        REFERENCES ods.organisations(organisation_id),
 
     /* enumerations ---------------------------------------------- */
     CONSTRAINT ck_accounts_status
@@ -113,7 +107,7 @@ CREATE INDEX IF NOT EXISTS idx_accounts_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_accounts_row_updated_at
 BEFORE UPDATE ON ods.accounts
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.accounts IS 'Chart‑of‑accounts records from Xero, stored as a Type‑2 Slowly Changing Dimension to capture historical changes.';
@@ -126,3 +120,5 @@ COMMENT ON COLUMN ods.accounts.surrogate_key IS 'Surrogate key for each version 
 COMMENT ON COLUMN ods.accounts.valid_from IS 'Timestamp at which this version becomes valid.';
 COMMENT ON COLUMN ods.accounts.valid_to IS 'Timestamp at which this version ceases to be valid.';
 COMMENT ON COLUMN ods.accounts.is_current IS 'TRUE if this row is the current version.';
+
+

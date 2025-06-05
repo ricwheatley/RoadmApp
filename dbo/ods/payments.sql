@@ -124,7 +124,7 @@ CREATE INDEX IF NOT EXISTS idx_payments_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_payments_row_updated_at
 BEFORE UPDATE ON ods.payments
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.payments IS 'Top‑level payment records from Xero, stored as Type‑2 slowly changing dimension records.';

@@ -93,7 +93,7 @@ CREATE INDEX IF NOT EXISTS idx_invoice_allocations_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_invoice_allocations_row_updated_at
 BEFORE UPDATE ON ods.invoice_allocations
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.invoice_allocations IS 'Allocations (credit notes, prepayments, overpayments, etc.) applied to invoices, stored as Type‑2 slowly‑changing dimensions (one row per allocation version).';

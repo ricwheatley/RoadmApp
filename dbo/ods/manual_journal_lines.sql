@@ -109,7 +109,7 @@ CREATE INDEX IF NOT EXISTS idx_mj_lines_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_mj_lines_row_updated_at
 BEFORE UPDATE ON ods.manual_journal_lines
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.manual_journal_lines IS 'Manual‑journal line items stored as Type‑2 SCD records.';

@@ -91,7 +91,7 @@ CREATE INDEX IF NOT EXISTS idx_budget_periods_organisation_id
 /* --- Trigger to maintain row_updated_at --------------------- */
 CREATE TRIGGER trg_update_budget_periods_row_updated_at
 BEFORE UPDATE ON ods.budget_periods
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.budget_periods IS 'Monthly budget amounts per account, linked to a parent budget, stored as Type‑2 slowly changing dimensions.';

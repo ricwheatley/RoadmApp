@@ -92,7 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_quotes_batch_id             ON ods.quotes(batch_i
 /* --- Trigger to maintain row_updated_at ------------------------ */
 CREATE TRIGGER trg_update_quotes_row_updated_at
 BEFORE UPDATE ON ods.quotes
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation -------------------------------------------- */
 COMMENT ON TABLE ods.quotes IS 'Stores Xero Quote headers as Type‑2 slowly changing dimensions (one row per quote version).';

@@ -91,7 +91,7 @@ CREATE INDEX IF NOT EXISTS idx_employees_organisation_id
 /* --- Trigger to maintain row_updated_at --------------------- */
 CREATE TRIGGER trg_update_employees_row_updated_at
 BEFORE UPDATE ON ods.employees
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.employees IS 'Employee master records captured with Type‑2 slowly changing dimensions to preserve history.';

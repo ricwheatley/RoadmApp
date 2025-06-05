@@ -207,6 +207,11 @@ namespace XeroNetStandardApp.Services
 
             var resp = await http.GetAsync(url);
             var body = await resp.Content.ReadAsStringAsync();
+            _log.LogInformation("Headers for {Endpoint} {Status} page {Page}:", endpoint.Name, status ?? "-", 1);
+            foreach (var h in resp.Headers)
+                _log.LogInformation("  {Key}: {Value}", h.Key, string.Join(",", h.Value));
+            _log.LogInformation("Body for {Endpoint} {Status} page {Page}: {Body}",
+                                endpoint.Name, status ?? "-", 1, body);
 
             if (resp.StatusCode == HttpStatusCode.NotModified)
             {
@@ -230,6 +235,11 @@ namespace XeroNetStandardApp.Services
                 await Task.Delay(1100); // stay within Xero’s 60-calls-per-minute ceiling
                 resp = await http.GetAsync($"{baseUrl}{path}?{queryBase}page={page}");
                 body = await resp.Content.ReadAsStringAsync();
+                _log.LogInformation("Headers for {Endpoint} {Status} page {Page}:", endpoint.Name, status ?? "-", page);
+                foreach (var h in resp.Headers)
+                    _log.LogInformation("  {Key}: {Value}", h.Key, string.Join(",", h.Value));
+                _log.LogInformation("Body for {Endpoint} {Status} page {Page}: {Body}",
+                                    endpoint.Name, status ?? "-", page, body);
 
                 if (!resp.IsSuccessStatusCode)
                 {

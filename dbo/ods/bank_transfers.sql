@@ -99,7 +99,7 @@ CREATE INDEX IF NOT EXISTS idx_bank_transfers_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_bank_transfers_row_updated_at
 BEFORE UPDATE ON ods.bank_transfers
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.bank_transfers IS 'Bank transfers between two bank accounts, captured as Type‑2 slowly changing dimension records.';

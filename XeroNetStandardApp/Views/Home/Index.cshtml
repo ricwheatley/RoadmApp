@@ -1,4 +1,4 @@
-@model XeroNetStandardApp.Models.HomeIndexViewModel
+﻿@model XeroNetStandardApp.Models.HomeIndexViewModel
 @{
     ViewData["Title"] = "Connected Organisations";
 }
@@ -9,7 +9,9 @@
         {
             <h5 class="card-title">No Xero organisation connected</h5>
             <p class="card-text">You can connect an organisation to begin loading data.</p>
-            <a class="btn btn-primary" asp-controller="Authorization" asp-action="Index">Connect to Xero</a>
+            <a class="btn btn-primary"
+               asp-controller="Authorization"
+               asp-action="Index">Connect to Xero</a>
         }
         else
         {
@@ -30,6 +32,7 @@
                                 <th>Last&nbsp;Updated</th>
                                 <th>Rows&nbsp;Inserted</th>
                                 <th colspan="3">Actions</th>
+                                <th colspan="4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -37,41 +40,62 @@
                             {
                                 <tr>
                                     <td>@t.OrgName</td>
-                                    <td class="text-monospace">@t.TenantId</td>
-                                    <td class="last-run"data-timestamp="@(t.LastCallUtc.HasValue? t.LastCallUtc.Value.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'"): "")">
+
+                                    @* Tenant ID with inline copy button *@
+                                    <td class="text-monospace d-flex align-items-center">
+                                        <span class="me-1">@t.TenantId</span>
+                                        <button type="button"
+                                                class="btn btn-link p-0 text-decoration-none copy-tenant"
+                                                data-tenant="@t.TenantId"
+                                                aria-label="Copy tenant id">
+                                            <i class="bi bi-copy" aria-hidden="true"></i>
+                                        </button>
+                                    </td>
+
+                                    <td class="last-run"
+                                        data-timestamp="@(t.LastCallUtc.HasValue
+                                                                                                  ? t.LastCallUtc.Value.ToUniversalTime()
+                                                                                                       .ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")
+                                                                                      : "")">
                         </td>
-                        <td class="text-end">@t.LastRowsInserted</td>
-                        <td>
-                            <a class="btn btn-sm btn-outline-secondary"
-                               asp-controller="DataLoadLogs"
-                               asp-action="Index"
-                               asp-route-tenantId="@t.TenantId"
-                               asp-route-orgName="@t.OrgName">Logs</a>
-                        </td>
-                        <td>
-                            <a class="btn btn-sm btn-outline-primary"
-                               asp-controller="Authorization"
-                               asp-action="Index">Reauthorise</a>
-                        </td>
-                        <td>
-                            <a class="btn btn-sm btn-outline-danger"
-                               asp-controller="Authorization"
-                               asp-action="Disconnect"
-                               asp-route-tenantId="@t.TenantId">Disconnect</a>
-                        </td>
-                    </tr>
+
+                                    <td class="text-end">@t.LastRowsInserted</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           asp-controller="DataLoadLogs"
+                                           asp-action="Index"
+                                           asp-route-tenantId="@t.TenantId"
+                                           asp-route-orgName="@t.OrgName">Logs</a>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-info js-show-scopes"
+                                                data-scopes="@string.Join(", ", t.Scopes ?? new List<string>())">
+                                            Scopes
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-controller="Authorization"
+                                           asp-action="Index">Reauthorise</a>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-danger"
+                                           asp-controller="Authorization"
+                                           asp-action="Disconnect"
+                                           asp-route-tenantId="@t.TenantId">Disconnect</a>
+                                    </td>
+                                </tr>
                                         }
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
-                                <!-- blank cells for the first five columns -->
-                                <td></td>  @* Organisation *@
-                                <td></td>  @* Tenant ID *@
-                                <td></td>  @* Last Updated *@
-                                <td></td>  @* Rows Inserted *@
-                                <td></td>  @* Logs column *@
+                                <td></td> @* Organisation *@
+                                <td></td> @* Tenant ID *@
+                                <td></td> @* Last Updated *@
+                                <td></td> @* Rows Inserted *@
+                                <td></td> @* Logs column *@
+                                <td></td> @* Scopes column *@
 
-                                <!-- Reauthorise column: our Add-New button -->
                                 <td class="text-center">
                                     <a class="btn btn-sm btn-outline-primary"
                                        asp-controller="Authorization"
@@ -80,8 +104,6 @@
                                         + Add New
                                     </a>
                                 </td>
-
-                                <!-- keep a final empty cell so the Disconnect column lines up -->
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -89,6 +111,22 @@
                 </div>
             }
         }
+    </div>
+</div>
+
+<!-- Scopes modal -->
+<div class="modal fade" id="scopesModal" tabindex="-1" aria-labelledby="scopesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scopesModalLabel">Authorised Scopes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="scopesModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -101,5 +139,15 @@
                 formatIsoDates('.last-run');
             }
         }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.js-show-scopes').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const scopes = btn.dataset.scopes || '';
+                    document.getElementById('scopesModalBody').textContent = scopes;
+                    const m = new bootstrap.Modal('#scopesModal');
+                    m.show();
+                });
+            });
+        });
     </script>
 }

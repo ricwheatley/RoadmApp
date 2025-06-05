@@ -115,7 +115,7 @@ CREATE INDEX IF NOT EXISTS idx_cn_line_items_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_cn_line_items_row_updated_at
 BEFORE UPDATE ON ods.credit_note_line_items
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.credit_note_line_items IS 'Line‑level details for credit notes captured as Type‑2 slowly‑changing dimensions (one row per LineItemID version).';

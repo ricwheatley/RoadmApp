@@ -51,7 +51,8 @@ namespace XeroNetStandardApp.Controllers
                 {
                     TenantId = c.TenantId.ToString(),
                     OrgName = c.TenantName,
-                    Schedules = new Dictionary<string, string>() // populated later
+                    Schedules = new Dictionary<string, string>(), // populated later
+                    Scopes = token.Scopes?.ToList() ?? new List<string>()
                 }).ToList(),
 
                 Endpoints = new List<EndpointOption>

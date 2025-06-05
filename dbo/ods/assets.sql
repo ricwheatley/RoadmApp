@@ -58,8 +58,7 @@ CREATE TABLE IF NOT EXISTS ods.assets (
     source_record_modified_at   TIMESTAMPTZ,
 
     /* --- Constraints ----------------------------------------- */
-    CONSTRAINT uq_assets_business_key_current
-        UNIQUE (asset_id, is_current) WHERE is_current,
+
 
     CONSTRAINT ck_assets_record_status
         CHECK (record_status IN ('ACTIVE','SUPERSEDED','ARCHIVED','REMOVED')),
@@ -67,11 +66,7 @@ CREATE TABLE IF NOT EXISTS ods.assets (
         CHECK (valid_from < valid_to)
 );
 
-/* --- Foreign Keys ------------------------------------------- */
-ALTER TABLE ods.assets
-    ADD CONSTRAINT fk_assets_organisation
-    FOREIGN KEY (organisation_id)
-    REFERENCES ods.organisations(organisation_id);
+
 
 /* --- Indexes ------------------------------------------------- */
 CREATE INDEX IF NOT EXISTS idx_assets_business_key_current
@@ -92,7 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_assets_organisation_id
 /* --- Trigger to maintain row_updated_at ---------------------- */
 CREATE TRIGGER trg_update_assets_row_updated_at
 BEFORE UPDATE ON ods.assets
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------ */
 COMMENT ON TABLE ods.assets IS 'Stores fixed‑asset master records from the Xero Assets API as Type‑2 slowly changing dimensions.';

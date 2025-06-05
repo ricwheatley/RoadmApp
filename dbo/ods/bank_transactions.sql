@@ -118,7 +118,7 @@ CREATE INDEX IF NOT EXISTS idx_bt_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_bt_row_updated_at
 BEFORE UPDATE ON ods.bank_transactions
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.bank_transactions IS 'Bank transactions captured as Type‑2 SCD records.';

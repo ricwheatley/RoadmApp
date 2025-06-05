@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_bank_transfer_attachments_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_bank_transfer_attachments_row_updated_at
 BEFORE UPDATE ON ods.bank_transfer_attachments
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.bank_transfer_attachments IS 'Attachments associated with individual bank transfers, captured as Type‑2 slowly changing dimension records.';

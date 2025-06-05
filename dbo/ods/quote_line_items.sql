@@ -82,7 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_quote_line_items_batch_id            ON ods.quote
 /* --- Trigger to maintain row_updated_at ------------------------ */
 CREATE TRIGGER trg_update_quote_line_items_row_updated_at
 BEFORE UPDATE ON ods.quote_line_items
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation -------------------------------------------- */
 COMMENT ON TABLE ods.quote_line_items IS 'Stores Xero Quote Line Items as Type‑2 slowly changing dimensions (one row per line‑item version).';

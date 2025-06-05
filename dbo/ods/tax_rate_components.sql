@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_tax_rate_components_batch_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_tax_rate_components_row_updated_at
 BEFORE UPDATE ON ods.tax_rate_components
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.tax_rate_components IS 'Tax‑rate component breakdowns (e.g. GST, PST) stored as a Type‑2 SCD.';

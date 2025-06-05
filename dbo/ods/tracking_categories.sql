@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_tracking_categories_batch_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_tracking_categories_row_updated_at
 BEFORE UPDATE ON ods.tracking_categories
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ---------------------------------------- */
 COMMENT ON TABLE ods.tracking_categories IS 'High‑level tracking categories for reporting dimensions; stored as Type‑2 SCD.';

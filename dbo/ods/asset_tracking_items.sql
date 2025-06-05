@@ -88,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_asset_tracking_items_organisation_id
 /* --- Trigger to maintain row_updated_at ---------------------- */
 CREATE TRIGGER trg_update_asset_tracking_items_row_updated_at
 BEFORE UPDATE ON ods.asset_tracking_items
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------ */
 COMMENT ON TABLE ods.asset_tracking_items IS 'Links Xero fixed assets to their applied tracking options (up to two per asset) as a Type‑2 dimension.';

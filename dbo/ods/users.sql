@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_users_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_users_row_updated_at
 BEFORE UPDATE ON ods.users
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.users IS 'Users of the Xero organisation captured as Type‑2 slowly‑changing dimensions.';

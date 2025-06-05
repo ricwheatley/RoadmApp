@@ -90,7 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_repeating_invoices_batch_id            ON ods.rep
 /* --- Trigger to maintain row_updated_at ------------------------ */
 CREATE TRIGGER trg_update_repeating_invoices_row_updated_at
 BEFORE UPDATE ON ods.repeating_invoices
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation -------------------------------------------- */
 COMMENT ON TABLE ods.repeating_invoices IS 'Stores Xero Repeating Invoices as Type‑2 slowly changing dimensions (one row per repeating‑invoice template version).';

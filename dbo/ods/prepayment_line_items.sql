@@ -101,7 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_prepayment_li_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_prepayment_li_row_updated_at
 BEFORE UPDATE ON ods.prepayment_line_items
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.prepayment_line_items IS 'Line items within a prepayment, stored as Type‑2 slowly changing dimension rows.';

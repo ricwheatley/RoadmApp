@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_linked_txn_status            ON ods.linked_transa
 /* --- Trigger to maintain row_updated_at --------------------- */
 CREATE TRIGGER trg_update_linked_txn_row_updated_at
 BEFORE UPDATE ON ods.linked_transactions
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.linked_transactions IS 'Links a source invoice line item to a target bill line item, enabling on‑charge workflows. Stored with Type‑2 slowly changing dimensions to preserve history.';

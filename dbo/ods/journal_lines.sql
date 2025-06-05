@@ -101,7 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_journal_lines_organisation_id
 /* --- Trigger to maintain row_updated_at ----------------------- */
 CREATE TRIGGER trg_update_journal_lines_row_updated_at
 BEFORE UPDATE ON ods.journal_lines
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.journal_lines IS 'Line items belonging to Xero journals, stored as Type‑2 slowly‑changing dimensions (one row per version).';

@@ -90,7 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_budgets_organisation_id
 /* --- Trigger to maintain row_updated_at --------------------- */
 CREATE TRIGGER trg_update_budgets_row_updated_at
 BEFORE UPDATE ON ods.budgets
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.budgets IS 'Organisation‑level or tracking‑category budgets (up to 24 months), captured as Type‑2 slowly changing dimensions.';

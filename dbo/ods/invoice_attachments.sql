@@ -93,7 +93,7 @@ CREATE INDEX IF NOT EXISTS idx_invoice_attachments_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_invoice_attachments_row_updated_at
 BEFORE UPDATE ON ods.invoice_attachments
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.invoice_attachments IS 'Attachments (files) linked to invoices, stored as Type‑2 slowly‑changing dimensions (one row per attachment version).';

@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_contact_payment_terms_organisation_id
 -- Row‑updated‑at trigger for ods.contact_payment_terms
 CREATE TRIGGER trg_update_contact_payment_terms_row_updated_at
 BEFORE UPDATE ON ods.contact_payment_terms
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* ----------------------------------------------------------------
    3.  Documentation                                                */

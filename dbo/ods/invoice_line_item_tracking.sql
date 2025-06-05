@@ -96,7 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_line_item_tracking_organisation_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_line_item_tracking_row_updated_at
 BEFORE UPDATE ON ods.invoice_line_item_tracking
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ----------------------------------------- */
 COMMENT ON TABLE ods.invoice_line_item_tracking IS 'Tracking category/option selections for each invoice line item stored as Type‑2 slowly‑changing dimensions (one row per version).';

@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_po_li_org_id              ON ods.purchase_order_l
 /* --- Trigger to maintain row_updated_at ------------------------- */
 CREATE TRIGGER trg_update_po_li_row_updated_at
 BEFORE UPDATE ON ods.purchase_order_line_items
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation --------------------------------------------- */
 COMMENT ON TABLE ods.purchase_order_line_items IS 'Line items for Xero Purchase Orders with Type‑2 SCD history (one row per line item version).';

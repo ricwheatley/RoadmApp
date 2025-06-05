@@ -77,7 +77,7 @@ CREATE INDEX IF NOT EXISTS idx_org_external_links_batch_id
 /* --- Row‑updated‑at trigger ---------------------------------- */
 CREATE TRIGGER trg_update_org_external_links_row_updated_at
 BEFORE UPDATE ON ods.organisation_external_links
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.organisation_external_links IS 'External links (Facebook, Twitter, Website, etc.) for Xero organisations, stored as a Type‑2 SCD to track history.';

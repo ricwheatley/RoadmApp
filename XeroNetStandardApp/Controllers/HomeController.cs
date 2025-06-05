@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,8 @@ namespace XeroNetStandardApp.Controllers
                     model.Tenants.Add(new OrgTenant
                     {
                         TenantId = t.TenantId.ToString(),
-                        OrgName = t.TenantName
+                        OrgName = t.TenantName,
+                        Scopes = token.Scopes?.ToList() ?? new List<string>()
                     });
                 }
             }

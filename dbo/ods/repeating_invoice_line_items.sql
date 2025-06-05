@@ -94,7 +94,7 @@ CREATE INDEX IF NOT EXISTS idx_repeat_inv_line_items_batch_id
 /* --- Trigger to maintain row_updated_at ------------------------ */
 CREATE TRIGGER trg_update_repeat_inv_line_items_row_updated_at
 BEFORE UPDATE ON ods.repeating_invoice_line_items
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation -------------------------------------------- */
 COMMENT ON TABLE ods.repeating_invoice_line_items IS 'Stores line‑item details for Xero Repeating Invoices as Type‑2 slowly changing dimensions.';

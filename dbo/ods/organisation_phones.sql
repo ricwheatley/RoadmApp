@@ -78,7 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_org_phones_batch_id
 /* --- Row‑updated‑at trigger ---------------------------------- */
 CREATE TRIGGER trg_update_org_phones_row_updated_at
 BEFORE UPDATE ON ods.organisation_phones
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.organisation_phones IS 'Phone numbers for Xero organisations, captured as a Type‑2 SCD to retain history.';

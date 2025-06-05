@@ -96,7 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_asset_type_book_depr_org_id
 /* --- Trigger to maintain row_updated_at ---------------------- */
 CREATE TRIGGER trg_update_asset_type_book_depr_row_updated_at
 BEFORE UPDATE ON ods.asset_type_book_depreciation_settings
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------ */
 COMMENT ON TABLE ods.asset_type_book_depreciation_settings

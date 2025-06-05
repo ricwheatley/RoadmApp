@@ -87,7 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_tracking_options_batch_id
 /* --- Trigger to maintain row_updated_at -------------------- */
 CREATE TRIGGER trg_update_tracking_options_row_updated_at
 BEFORE UPDATE ON ods.tracking_options
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ---------------------------------------- */
 COMMENT ON TABLE ods.tracking_options IS 'Tracking category options (child of tracking_categories); stored as Type‑2 SCD.';

@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_contact_groups_organisation_id
 -- Row‑updated‑at trigger for ods.contact_groups
 CREATE TRIGGER trg_update_contact_groups_row_updated_at
 BEFORE UPDATE ON ods.contact_groups
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* ----------------------------------------------------------------
    3.  Documentation                                                */

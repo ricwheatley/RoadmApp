@@ -67,7 +67,7 @@ CREATE INDEX IF NOT EXISTS idx_contact_persons_organisation_id
 -- Row‑updated‑at trigger for child table
 CREATE TRIGGER trg_update_contact_persons_row_updated_at
 BEFORE UPDATE ON ods.contact_persons
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 COMMENT ON TABLE ods.contact_persons IS 'Type‑2 SCD table capturing historical details of individual ContactPersons linked to a Contact.';
 COMMENT ON COLUMN ods.contact_persons.contact_id IS 'Parent Xero ContactID.';

@@ -20,6 +20,11 @@ namespace XeroNetStandardApp.Models
             Schedules.TryGetValue(endpointKey, out var val) ? val : "—";
         public DateTimeOffset? LastCallUtc { get; set; }
         public int? LastRowsInserted { get; set; }
+
+        /// <summary>
+        /// Scopes authorised for this tenant.
+        /// </summary>
+        public List<string> Scopes { get; set; } = new();
     }
 
     public class EndpointOption

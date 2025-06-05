@@ -88,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_po_status               ON ods.purchase_orders(st
 /* --- Trigger to maintain row_updated_at ------------------------- */
 CREATE TRIGGER trg_update_po_row_updated_at
 BEFORE UPDATE ON ods.purchase_orders
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation --------------------------------------------- */
 COMMENT ON TABLE ods.purchase_orders IS 'Stores Xero Purchase Orders with Type‑2 SCD history (one version per change).';

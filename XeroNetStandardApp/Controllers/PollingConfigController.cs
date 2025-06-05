@@ -62,8 +62,9 @@ public class PollingConfigController : Controller
         var tenants = token.Tenants.Select(t => new OrgTenant
             {
                 TenantId = t.TenantId.ToString(),
-                OrgName = t.TenantName
-            }).ToList();
+                OrgName = t.TenantName,
+                Scopes = token.Scopes?.ToList() ?? new List<string>()
+        }).ToList();
 
         var model = new PollingConfigViewModel
         {

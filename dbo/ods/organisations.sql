@@ -67,8 +67,7 @@ CREATE TABLE IF NOT EXISTS ods.organisations (
     source_record_modified_at TIMESTAMPTZ,
 
     /* --- Constraints ------------------------------------------- */
-    CONSTRAINT uq_organisations_business_key_current
-        UNIQUE (organisation_id, is_current) WHERE is_current,
+
 
     CONSTRAINT ck_org_record_status
         CHECK (record_status IN ('ACTIVE','SUPERSEDED','ARCHIVED','REMOVED')),
@@ -127,7 +126,7 @@ CREATE INDEX IF NOT EXISTS idx_organisations_batch_id
 /* --- Row‑updated‑at trigger ---------------------------------- */
 CREATE TRIGGER trg_update_organisations_row_updated_at
 BEFORE UPDATE ON ods.organisations
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------- */
 COMMENT ON TABLE ods.organisations IS 'Master Xero tenant table. Type‑2 SCD keeps historical snapshots of organisation metadata.';
@@ -136,3 +135,4 @@ COMMENT ON COLUMN ods.organisations.surrogate_key IS 'Surrogate key for each ver
 COMMENT ON COLUMN ods.organisations.valid_from IS 'Timestamp at which this version becomes valid.';
 COMMENT ON COLUMN ods.organisations.valid_to IS 'Timestamp at which this version ceases to be valid.';
 COMMENT ON COLUMN ods.organisations.is_current IS 'TRUE if this row is the current version.';
+

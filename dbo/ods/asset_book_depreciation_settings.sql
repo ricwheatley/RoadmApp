@@ -101,7 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_asset_book_depr_settings_organisation_id
 /* --- Trigger to maintain row_updated_at ---------------------- */
 CREATE TRIGGER trg_update_asset_book_depr_settings_row_updated_at
 BEFORE UPDATE ON ods.asset_book_depreciation_settings
-FOR EACH ROW EXECUTE FUNCTION fn_update_row_updated_at();
+FOR EACH ROW EXECUTE FUNCTION ods.fn_update_row_updated_at();
 
 /* --- Documentation ------------------------------------------ */
 COMMENT ON TABLE ods.asset_book_depreciation_settings IS 'Stores depreciation settings (ACCOUNTING & TAX books) for each fixed asset as a Type‑2 slowly‑changing dimension.';

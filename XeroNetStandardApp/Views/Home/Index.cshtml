@@ -144,7 +144,8 @@
                 btn.addEventListener('click', () => {
                     const scopes = btn.dataset.scopes || '';
                     document.getElementById('scopesModalBody').textContent = scopes;
-                    const m = new bootstrap.Modal('#scopesModal');
+                    const modalElem = document.getElementById('scopesModal');
+                    const m = new bootstrap.Modal(modalElem);
                     m.show();
                 });
             });

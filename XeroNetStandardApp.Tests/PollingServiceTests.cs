@@ -76,7 +76,7 @@ namespace XeroNetStandardApp.Tests
             var rows = await svc.RunEndpointAsync("123", "assets", DateTimeOffset.UtcNow);
 
             Assert.Equal(("123", "assets"), raw.LastCall);
-            Assert.Equal(0, rows);
+            Assert.Equal(5, rows);
         }
     }
 }

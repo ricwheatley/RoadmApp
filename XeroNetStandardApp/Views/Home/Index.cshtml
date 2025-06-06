@@ -42,7 +42,7 @@
                                     <td>@t.OrgName</td>
 
                                     @* Tenant ID with inline copy button *@
-                                    <td class="text-monospace d-flex align-items-center">
+                                    <td class="font-monospace d-flex align-items-center">
                                         <span class="me-1">@t.TenantId</span>
                                         <button type="button"
                                                 class="btn btn-link p-0 text-decoration-none copy-tenant"
@@ -152,7 +152,9 @@
                     } else {
                         body.textContent = '';
                     }
-                    $('#scopesModal').modal('show');
+                    const modalEl = document.getElementById('scopesModal');
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
                 });
             });
         }

@@ -1,8 +1,7 @@
 /* eslint-disable no-undef */
 /**
  * data-load-logs.js
- * Works with Bootstrap 4.x and old 5.x bundles.
- * Uses jQuery’s $(...).collapse('toggle') API.
+ * Uses Bootstrap 5's Collapse API to expand and collapse rows.
  */
 
 function initDataLoadLogs() {
@@ -21,10 +20,11 @@ function initDataLoadLogs() {
         if (!target) return;
 
         // jQuery-based toggle (works in Bootstrap 4 and 5)
-        $(target).collapse('toggle');
+        const collapse = bootstrap.Collapse.getOrCreateInstance(target);
+        collapse.toggle();
 
-        $(target).one('shown.bs.collapse', () => { btn.textContent = '–'; });
-        $(target).one('hidden.bs.collapse', () => { btn.textContent = '+'; });
+        target.addEventListener('shown.bs.collapse', () => { btn.textContent = '–'; }, { once: true });
+        target.addEventListener('hidden.bs.collapse', () => { btn.textContent = '+'; }, { once: true });
     });
 }
 

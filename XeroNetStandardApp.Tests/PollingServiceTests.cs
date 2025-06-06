@@ -1,24 +1,50 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Token;
-using Xunit;
+using XeroNetStandardApp.Models;
 using XeroNetStandardApp.Services;
+using Xunit;
 
 namespace XeroNetStandardApp.Tests
 {
     public class PollingServiceTests
     {
-        private class StubRaw : IXeroRawIngestService
+        private sealed class StubRaw : IXeroRawIngestService
         {
-            public (string Tenant, string Endpoint)? LastCall { get; private set; }
-            public Task<int> RunOnceAsync(string tenantId) => Task.FromResult(0);
-            public Task<int> RunOnceAsync(string tenantId, string endpointKey)
+            // capture the most-recent call so the test can Assert on it
+            public (string TenantId, string? EndpointKey) LastCall { get; private set; }
+
+            public Task<IReadOnlyList<EndpointIngestReport>> RunOnceAsync(string tenantId)
+            {
+                LastCall = (tenantId, null);     // null means “all endpoints”
+                return Task.FromResult<IReadOnlyList<EndpointIngestReport>>(
+                    Array.Empty<EndpointIngestReport>());
+            }
+
+            public Task<IReadOnlyList<EndpointIngestReport>> RunOnceAsync(string tenantId,
+                                                                          string endpointKey)
             {
                 LastCall = (tenantId, endpointKey);
-                return Task.FromResult(0);
+
+                // Provide a minimal, successful report so the code under test
+                // can behave as if 5 rows were inserted.
+                var reports = new[]
+                {
+            new EndpointIngestReport(
+                endpointKey,
+                Status: null,
+                RowsInserted: 5,
+                WasUpToDate: false,
+                ResponseCode: HttpStatusCode.OK,
+                ErrorDetail: null)
+        };
+
+                return Task.FromResult<IReadOnlyList<EndpointIngestReport>>(reports);
             }
         }
 

@@ -40,6 +40,7 @@ namespace XeroNetStandardApp.Services
         private readonly IConfiguration _cfg;
         private readonly TokenService _tokenService;
         private static readonly TimeSpan _expiryBuffer = TimeSpan.FromMinutes(2);
+        private const int _maxPageSize = 1000;     // Xero’s hard limit
 
         public XeroRawIngestService(
             IConfiguration cfg,
@@ -54,24 +55,24 @@ namespace XeroNetStandardApp.Services
             _log = log;
             _tokenService = tokenService;
             _connString = cfg.GetConnectionString("Postgres")
-                           ?? Environment.GetEnvironmentVariable("POSTGRES_CONN_STRING")
-                           ?? throw new InvalidOperationException("Postgres conn string missing");
+                         ?? Environment.GetEnvironmentVariable("POSTGRES_CONN_STRING")
+                         ?? throw new InvalidOperationException("Postgres conn string missing");
         }
 
         // ─────────────────────────────────────────────
         //  PUBLIC ENTRY-POINTS
         // ─────────────────────────────────────────────
 
-        public Task<int> RunOnceAsync(string tenantId)
+        public Task<IReadOnlyList<EndpointIngestReport>> RunOnceAsync(string tenantId)
             => RunCoreAsync(tenantId, _opt.Endpoints);
 
-        public Task<int> RunOnceAsync(string tenantId, string endpointKey)
+        public Task<IReadOnlyList<EndpointIngestReport>> RunOnceAsync(string tenantId, string endpointKey)
         {
             var ep = _opt.Endpoints
                          .Where(e => string.Equals(
-                                        e.Name.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase),
-                                        endpointKey,
-                                        StringComparison.OrdinalIgnoreCase))
+                                         e.Name.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase),
+                                         endpointKey,
+                                         StringComparison.OrdinalIgnoreCase))
                          .ToArray();
 
             if (ep.Length == 0)
@@ -86,7 +87,9 @@ namespace XeroNetStandardApp.Services
         // ─────────────────────────────────────────────
         //  CORE PIPELINE
         // ─────────────────────────────────────────────
-        private async Task<int> RunCoreAsync(string tenantId, IEnumerable<EndpointConfig> endpointsToRun)
+        private async Task<IReadOnlyList<EndpointIngestReport>> RunCoreAsync(
+            string tenantId,
+            IEnumerable<EndpointConfig> endpointsToRun)
         {
             var token = _tokenService.RetrieveToken()
                         ?? throw new InvalidOperationException("No saved Xero token on disk.");
@@ -98,15 +101,15 @@ namespace XeroNetStandardApp.Services
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
             http.DefaultRequestHeaders.Add("xero-tenant-id", tenantId);
 
-            var totalRows = 0;
+            var all = new List<EndpointIngestReport>();
 
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync();
 
             foreach (var ep in endpointsToRun)
-                totalRows += await IngestEndpointAsync(http, conn, ep, Guid.Parse(tenantId));
+                all.AddRange(await IngestEndpointAsync(http, conn, ep, Guid.Parse(tenantId)));
 
-            return totalRows;
+            return all;
         }
 
         // ─────────────────────────────────────────────
@@ -156,27 +159,28 @@ namespace XeroNetStandardApp.Services
         // ─────────────────────────────────────────────
         //  ENDPOINT INGEST
         // ─────────────────────────────────────────────
-        private async Task<int> IngestEndpointAsync(HttpClient http,
-                                                    NpgsqlConnection conn,
-                                                    EndpointConfig endpoint,
-                                                    Guid tenantId)
+        private async Task<IReadOnlyList<EndpointIngestReport>> IngestEndpointAsync(
+            HttpClient http,
+            NpgsqlConnection conn,
+            EndpointConfig endpoint,
+            Guid tenantId)
         {
             var table = $"{_opt.Schema}.{endpoint.Name.ToLower()}";
-            var rows = 0;
+            var reports = new List<EndpointIngestReport>();
 
             try
             {
                 var since = await GetLastFetchedAsync(conn, table);
-                if (endpoint.SupportsModifiedSince && since != null)
+                if (endpoint.SupportsModifiedSince && !endpoint.SupportsOffset && since != null)
                     http.DefaultRequestHeaders.IfModifiedSince = since;
 
-                // ── loop over each Status value (or a single null value if none provided)
                 var statusList = (endpoint.Status?.Length ?? 0) > 0
                                  ? endpoint.Status
                                  : new[] { (string?)null };
 
                 foreach (var status in statusList ?? Array.Empty<string?>())
-                    rows += await IngestForOneStatusAsync(http, conn, endpoint, tenantId, table, status, since);
+                    reports.Add(await IngestForOneStatusAsync(http, conn, endpoint,
+                                                              tenantId, table, status, since));
             }
             catch (Exception ex)
             {
@@ -187,75 +191,131 @@ namespace XeroNetStandardApp.Services
                 http.DefaultRequestHeaders.Remove("If-Modified-Since");
             }
 
-            return rows;
+            return reports;
         }
 
-        private async Task<int> IngestForOneStatusAsync(HttpClient http,
-                                                        NpgsqlConnection conn,
-                                                        EndpointConfig endpoint,
-                                                        Guid tenantId,
-                                                        string table,
-                                                        string? status,
-                                                        DateTimeOffset? since)
+        // ─────────────────────────────────────────────
+        //  ONE STATUS, ALL PAGES  *or*  OFFSET LOOP
+        // ─────────────────────────────────────────────
+        private async Task<EndpointIngestReport> IngestForOneStatusAsync(
+            HttpClient http,
+            NpgsqlConnection conn,
+            EndpointConfig endpoint,
+            Guid tenantId,
+            string table,
+            string? status,
+            DateTimeOffset? since)
         {
             var rows = 0;
             var path = endpoint.Name.Replace(" ", string.Empty);
             var baseUrl = endpoint.ApiUrl.TrimEnd('/') + "/";
-            var queryBase = status == null ? string.Empty : $"status={status}&";
-            var pagePart = endpoint.SupportsPagination ? "page=1" : string.Empty;
-            var url = $"{baseUrl}{path}?{queryBase}{pagePart}".TrimEnd('?');
+            var query = status == null ? string.Empty : $"status={status}&";
+            var url = string.Empty;                  // declare once
+            HttpResponseMessage resp = null!;
+            string body = string.Empty;
 
-            var resp = await http.GetAsync(url);
-            var body = await resp.Content.ReadAsStringAsync();
-            _log.LogInformation("Headers for {Endpoint} {Status} page {Page}:", endpoint.Name, status ?? "-", 1);
+            /* ──────────────────────────────────────────
+               1. OFFSET-BASED LOOP  (Journals only)
+               ────────────────────────────────────────── */
+            if (endpoint.SupportsOffset)
+            {
+                // start from max(journal_number) already in ODS
+                var offset = await GetLastJournalNumberAsync(conn, tenantId) ?? 0;
+                
+                do
+                {
+                    url = $"{baseUrl}{path}?{query}offset={offset}";
+                    resp = await http.GetAsync(url);
+                    body = await resp.Content.ReadAsStringAsync();
+
+                    _log.LogInformation("{Endpoint} offset {Offset}: {Code}",
+                                        endpoint.Name, offset, resp.StatusCode);
+
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        _log.LogWarning("{Endpoint} offset {Offset}: {Code} – {Body}",
+                                        endpoint.Name, offset, resp.StatusCode, body);
+                        return new EndpointIngestReport(endpoint.Name, status, 0,
+                                                         false, resp.StatusCode, body.Truncate(400));
+                    }
+
+                    var inserted = await InsertPageAsync(conn, table, endpoint, offset, body, tenantId);
+                    rows += inserted;
+
+                    offset = GetNextOffset(body);         // returns -1 when array empty
+                }
+                while (offset >= 0);
+
+                _log.LogInformation("{Endpoint}: {Rows} rows inserted via offset loop.",
+                                    endpoint.Name, rows);
+
+                return new EndpointIngestReport(endpoint.Name, status, rows,
+                                                 rows == 0, HttpStatusCode.OK, null);
+            }
+
+            /* ──────────────────────────────────────────
+               2. PAGE-BASED LOOP  (all other endpoints)
+               ────────────────────────────────────────── */
+            var pageSize = endpoint.PageSize ?? _maxPageSize;
+            var first = endpoint.SupportsPagination ? $"page=1&pageSize={pageSize}" : string.Empty;
+            url = $"{baseUrl}{path}?{query}{first}".TrimEnd('?');
+
+            resp = await http.GetAsync(url);
+            body = await resp.Content.ReadAsStringAsync();
+
+            _log.LogInformation("Headers for {Endpoint} {Status} page 1:",
+                                endpoint.Name, status ?? "-");
             foreach (var h in resp.Headers)
                 _log.LogInformation("  {Key}: {Value}", h.Key, string.Join(",", h.Value));
-            _log.LogInformation("Body for {Endpoint} {Status} page {Page}: {Body}",
-                                endpoint.Name, status ?? "-", 1, body);
 
+            // 304 = nothing new
             if (resp.StatusCode == HttpStatusCode.NotModified)
             {
                 _log.LogInformation("{Endpoint} {Status}: up-to-date (since {Since})",
                                     endpoint.Name, status ?? "-", since?.ToString("u"));
-                return 0;
+
+                return new EndpointIngestReport(endpoint.Name, status, 0,
+                                                 true, resp.StatusCode, null);
             }
 
-            if (!resp.IsSuccessStatusCode)
+            // 200 OK – page loop
+            if (resp.IsSuccessStatusCode)
             {
-                _log.LogWarning("{Endpoint} {Status}: {Code} – {Body}",
-                                endpoint.Name, status ?? "-", resp.StatusCode, body);
-                return 0;
-            }
+                var totalPages = GetTotalPages(body);
+                rows += await InsertPageAsync(conn, table, endpoint, 1, body, tenantId);
 
-            var totalPages = GetTotalPages(resp);
-            rows += await InsertPageAsync(conn, table, endpoint, 1, body, tenantId);
-
-            for (var page = 2; page <= totalPages; page++)
-            {
-                await Task.Delay(1100); // stay within Xero’s 60-calls-per-minute ceiling
-                resp = await http.GetAsync($"{baseUrl}{path}?{queryBase}page={page}");
-                body = await resp.Content.ReadAsStringAsync();
-                _log.LogInformation("Headers for {Endpoint} {Status} page {Page}:", endpoint.Name, status ?? "-", page);
-                foreach (var h in resp.Headers)
-                    _log.LogInformation("  {Key}: {Value}", h.Key, string.Join(",", h.Value));
-                _log.LogInformation("Body for {Endpoint} {Status} page {Page}: {Body}",
-                                    endpoint.Name, status ?? "-", page, body);
-
-                if (!resp.IsSuccessStatusCode)
+                for (var page = 2; page <= totalPages; page++)
                 {
-                    _log.LogWarning("{Endpoint} {Status} page {Page}: {Code} – {Body}",
-                                    endpoint.Name, status ?? "-", page, resp.StatusCode, body);
-                    break;
+                    await Task.Delay(1100);   // stay below 60-calls/min
+                    var nextUrl = $"{baseUrl}{path}?{query}page={page}&pageSize={pageSize}";
+                    resp = await http.GetAsync(nextUrl);
+                    body = await resp.Content.ReadAsStringAsync();
+
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        _log.LogWarning("{Endpoint} {Status} page {Page}: {Code} – {Body}",
+                                        endpoint.Name, status ?? "-", page, resp.StatusCode, body);
+                        break;
+                    }
+
+                    rows += await InsertPageAsync(conn, table, endpoint, page, body, tenantId);
                 }
 
-                rows += await InsertPageAsync(conn, table, endpoint, page, body, tenantId);
+                _log.LogInformation("{Endpoint} {Status}: {Rows} rows inserted.",
+                                    endpoint.Name, status ?? "-", rows);
+
+                return new EndpointIngestReport(endpoint.Name, status, rows,
+                                                 false, HttpStatusCode.OK, null);
             }
 
-            _log.LogInformation("{Endpoint} {Status}: {Rows} rows inserted over {Pages} pages",
-                                endpoint.Name, status ?? "-", rows, totalPages);
+            // any other status code (401, 403, 429, 5xx, …)
+            _log.LogWarning("{Endpoint} {Status}: {Code} – {Body}",
+                            endpoint.Name, status ?? "-", resp.StatusCode, body);
 
-            return rows;
+            return new EndpointIngestReport(endpoint.Name, status, 0,
+                                             false, resp.StatusCode, body.Truncate(500));
         }
+
 
         // ─────────────────────────────────────────────
         //  SMALL HELPERS
@@ -268,49 +328,121 @@ namespace XeroNetStandardApp.Services
             return last == null ? null : new DateTimeOffset(last.Value, TimeSpan.Zero);
         }
 
-        private static int GetTotalPages(HttpResponseMessage resp)
+        /// <summary>
+        /// Highest JournalNumber already present in ods.journals for this tenant/organisation.
+        /// Returns null the very first time (no rows yet).
+        /// </summary>
+        private static async Task<int?> GetLastJournalNumberAsync(
+            NpgsqlConnection conn,
+            Guid organisationId)
         {
-            foreach (var k in new[] { "xero-pagination-page-count", "xero-total-pages" })
-                if (resp.Headers.TryGetValues(k, out var v) &&
-                    int.TryParse(v.FirstOrDefault(), out var pages) && pages > 0)
-                    return pages;
-            return 1;
+            const string sql = @"
+                SELECT MAX(journal_number)
+                FROM   ods.journals
+                WHERE  organisation_id = @OrgId;";
+
+            return await conn.ExecuteScalarAsync<int?>(sql, new { OrgId = organisationId });
         }
 
-        private async Task<int> InsertPageAsync(NpgsqlConnection conn,
-                                        string table,
-                                        EndpointConfig endpoint,
-                                        int page,
-                                        string bodyJson,
-                                        Guid tenantId)
+        /// <returns>The JournalNumber of the last item, or -1 if the batch is empty.</returns>
+        private static int GetNextOffset(string bodyJson)
+        {
+            var root = JsonDocument.Parse(bodyJson).RootElement;
+
+            if (!root.TryGetProperty("Journals", out var list) || list.GetArrayLength() == 0)
+                return -1;     // empty → stop looping
+
+            var last = list[list.GetArrayLength() - 1];
+            return last.TryGetProperty("JournalNumber", out var numElem) &&
+                   numElem.TryGetInt32(out int num)
+                   ? num
+                   : -1;
+        }
+
+        private int GetTotalPages(string responseBody)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                var root = doc.RootElement;
+
+                if (root.ValueKind == JsonValueKind.Object &&
+                    root.TryGetProperty("pagination", out var pagination) &&
+                    pagination.ValueKind == JsonValueKind.Object &&
+                    pagination.TryGetProperty("pageCount", out var pageCountElem))
+                {
+                    int pages;
+                    if (pageCountElem.ValueKind == JsonValueKind.Number &&
+                        pageCountElem.TryGetInt32(out pages) && pages > 0)
+                        return pages;
+
+                    if (pageCountElem.ValueKind == JsonValueKind.String)
+                    {
+                        var text = pageCountElem.GetString();
+                        if (!string.IsNullOrEmpty(text) &&
+                            int.TryParse(text, out pages) && pages > 0)
+                            return pages;
+                    }
+
+                    _log.LogWarning("Invalid pageCount value in response; defaulting to 1.");
+                    return 1;
+                }
+
+                _log.LogWarning("Response body has no pagination info; defaulting to 1 page.");
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "Failed to parse pagination; defaulting to 1 page.");
+                return 1;
+            }
+        }
+
+        private async Task<int> InsertPageAsync(
+            NpgsqlConnection conn,
+            string table,
+            EndpointConfig endpoint,
+            int page,
+            string bodyJson,
+            Guid tenantId)
         {
             var root = JsonDocument.Parse(bodyJson).RootElement;
 
             JsonElement arrayElement;
             if (string.IsNullOrEmpty(endpoint.ResponseKey) && root.ValueKind == JsonValueKind.Array)
             {
-                // Response is a bare JSON array – use it as-is
-                arrayElement = root;
+                arrayElement = root; // bare array
             }
             else
             {
                 var key = endpoint.ResponseKey
-                          ?? (endpoint.Name.EndsWith("s", StringComparison.Ordinal)
-                                 ? endpoint.Name
-                                 : endpoint.Name + "s");
+                       ?? (endpoint.Name.EndsWith("s", StringComparison.Ordinal)
+                           ? endpoint.Name
+                           : endpoint.Name + "s");
 
                 if (!root.TryGetProperty(key, out arrayElement))
-                    return 0;                       // nothing we recognise – skip safely
+                    return 0;   // nothing recognised – skip safely
             }
 
-            const string sql = @"INSERT INTO {0} (page_number, payload_json, tenant_id)
-                         VALUES (@Page, @Payload::jsonb, @TenantId);";
+            const string sql =
+                @"INSERT INTO {0} (page_number, payload_json, tenant_id)
+                  VALUES (@Page, @Payload::jsonb, @TenantId);";
 
-            foreach (var el in arrayElement.EnumerateArray())        // ✔ now arrayElement
+            foreach (var el in arrayElement.EnumerateArray())
                 await conn.ExecuteAsync(string.Format(sql, table),
                                         new { Page = page, Payload = el.GetRawText(), TenantId = tenantId });
 
-            return arrayElement.GetArrayLength();                    // ✔ now arrayElement
+            return arrayElement.GetArrayLength();
         }
     }
+}
+
+// ─────────────────────────────────────────────
+//  EXTENSION(S)
+// ─────────────────────────────────────────────
+internal static class StringExtensions
+{
+    /// <summary>Return at most <paramref name="max"/> characters, adding an ellipsis if truncated.</summary>
+    public static string Truncate(this string value, int max)
+        => value.Length <= max ? value : value[..max] + " …";
 }

@@ -1,10 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Token;
 using XeroNetStandardApp.Models;
 
@@ -31,36 +33,92 @@ namespace XeroNetStandardApp.Services
                          ?? throw new InvalidOperationException("Postgres conn string missing");
         }
 
-        public async Task<int> RunEndpointAsync(string tenantId, string endpointKey, DateTimeOffset callTime)
+        public async Task<int> RunEndpointAsync(string tenantId,
+                                        string endpointKey,
+                                        DateTimeOffset callTime)
         {
+            // Ensure we still have a token before doing any work
             XeroOAuth2Token? tok = _tokenService.RetrieveToken();
             if (tok == null || string.IsNullOrEmpty(tok.AccessToken))
                 throw new InvalidOperationException("No valid Xero token on file.");
 
-            int rows = 0;
-            int? statusCode = null;
-            bool success;
+            int totalInserted = 0;
+            HttpStatusCode? overallCode = null;
+            bool success = false;
             string? errorMessage = null;
 
             try
             {
-                rows = await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
-                statusCode = 200;
-                success = true;
+                // NEW: list of detailed reports rather than a raw int
+                IReadOnlyList<EndpointIngestReport> reports =
+                    await _ingestSvc.RunOnceAsync(tenantId, endpointKey);
+
+                totalInserted = reports.Sum(r => r.RowsInserted);
+
+                // Failures are anything not OK (200) or Not-Modified (304)
+                var failures = reports.Where(r =>
+                                  r.ResponseCode != HttpStatusCode.OK &&
+                                  r.ResponseCode != HttpStatusCode.NotModified)
+                               .ToList();
+
+                success = failures.Count == 0;
+
+                // Decide an overall status code for logging / persistence
+                if (success)
+                {
+                    overallCode = totalInserted == 0
+                                  ? HttpStatusCode.NotModified
+                                  : HttpStatusCode.OK;
+                }
+                else
+                {
+                    overallCode = failures.First().ResponseCode; // first failure’s code
+                    errorMessage = string.Join(" | ", failures.Select(f =>
+                        $"{f.EndpointName} {f.Status ?? "-"} → {(int)f.ResponseCode} {f.ErrorDetail}"));
+                }
+
+                // ── Logging summary
+                if (success)
+                {
+                    if (overallCode == HttpStatusCode.NotModified)
+                        _log.LogInformation("{Endpoint}: no new records since last modified-date (tenant {Tenant})",
+                                            endpointKey, tenantId);
+                    else
+                        _log.LogInformation("{Endpoint}: {Count} records inserted for tenant {Tenant}",
+                                            endpointKey, totalInserted, tenantId);
+                }
+                else
+                {
+                    _log.LogWarning("{Endpoint}: {FailCount} failures, {Inserted} records inserted (tenant {Tenant})",
+                                    endpointKey, failures.Count, totalInserted, tenantId);
+                }
             }
             catch (Exception ex)
             {
+                // Unexpected exception during ingest
                 success = false;
-                statusCode = 500;
+                overallCode = HttpStatusCode.InternalServerError;
                 errorMessage = ex.Message;
-                _log.LogError(ex, "Polling failed for {Endpoint} and tenant {Tenant}", endpointKey, tenantId);
+                _log.LogError(ex,
+                              "Polling failed for {Endpoint} and tenant {Tenant}",
+                              endpointKey, tenantId);
             }
 
-            await LogResultAsync(tenantId, endpointKey, rows, callTime, statusCode, success, errorMessage);
+            // Persist the outcome – retains original LogResultAsync signature
+            await LogResultAsync(
+                tenantId,
+                endpointKey,
+                totalInserted,
+                callTime,
+                overallCode.HasValue ? (int)overallCode.Value : null,
+                success,
+                errorMessage);
 
             _log.LogInformation("Polled {Endpoint} for tenant {Tenant}", endpointKey, tenantId);
-            return rows;
+
+            return totalInserted;          // unchanged public contract
         }
+
 
         public async Task<IReadOnlyList<PollingStats>> GetPollingStatsAsync()
         {

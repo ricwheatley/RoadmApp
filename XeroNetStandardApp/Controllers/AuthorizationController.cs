@@ -1,17 +1,22 @@
 ﻿// AuthorizationController.cs
-// Ric Wheatley – May 2025 – logs full authorisation URL and validates dynamic state
+// Ric Wheatley – June 2025
+//
+// Builds the consent URL, exchanges the code for a token,
+// logs the full token (including authorised scopes) via DumpToConsole(),
+// and stores it for later API calls.
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Xero.NetStandard.OAuth2.Client;
 using Xero.NetStandard.OAuth2.Config;
 using Xero.NetStandard.OAuth2.Token;
 using XeroNetStandardApp.Services;
+using XeroNetStandardApp.Helpers;          // ← DumpToConsole lives here
 
 namespace XeroNetStandardApp.Controllers
 {
@@ -33,60 +38,67 @@ namespace XeroNetStandardApp.Controllers
             _log = log;
         }
 
-        // ─────────────────────────────────────────────────────────────────────────────
-        // GET  /Authorization           → build consent URL and redirect to Xero
-        // ─────────────────────────────────────────────────────────────────────────────
+        // ───────────────────────────────────────────────────────────────
+        // GET /Authorization  → build consent URL and redirect to Xero
+        // ───────────────────────────────────────────────────────────────
         [HttpGet]
         [Route("Authorization")]
         public IActionResult Index()
         {
-            // 1️⃣  Generate per-request state and stash it in session
             var state = Guid.NewGuid().ToString("N");
             HttpContext.Session.SetString(SessionKeyState, state);
 
-            // 2️⃣  Build login URI that includes scope, client_id, redirect_uri, state
+            // Build the login URI; BuildLoginUri() already includes your
+            // scope list from appsettings.json or XeroConfiguration.
             var loginUri = _client.BuildLoginUri(state);
 
-            // 3️⃣  Log the full URL so you can see the exact scopes
-            Console.WriteLine($"Authorisation URL: {loginUri}");
             _log.LogInformation("Authorisation URL: {LoginUri}", loginUri);
+            Console.WriteLine($"Authorisation URL: {loginUri}");
 
             return Redirect(loginUri);
         }
 
-        // ─────────────────────────────────────────────────────────────────────────────
-        // GET  /Authorization/Callback  ← Xero redirects back here
-        // ─────────────────────────────────────────────────────────────────────────────
+        // ───────────────────────────────────────────────────────────────
+        // GET /Authorization/Callback  ← Xero redirects back here
+        // ───────────────────────────────────────────────────────────────
         [HttpGet]
         [Route("Authorization/Callback")]
-        public async Task<IActionResult> Callback([FromQuery] string code,
-                                                  [FromQuery] string state)
+        public async Task<IActionResult> Callback(
+            [FromQuery] string code,
+            [FromQuery] string state)
         {
+            // 1  Validate state for CSRF protection
             var expectedState = HttpContext.Session.GetString(SessionKeyState);
             if (state != expectedState)
             {
                 _log.LogWarning("State mismatch – possible CSRF attack");
-                return BadRequest("Invalid state");
+                return BadRequest("Invalid state value.");
             }
 
+            // 2  Exchange code for token
             var token = (XeroOAuth2Token)await _client.RequestAccessTokenAsync(code);
-            _tokenService.StoreToken(token);
 
-            _log.LogInformation("Xero token stored (expires {Expiry}).",
-                                token.ExpiresAtUtc);
+            // 3  << NEW – dump the whole token to console + ILogger >>
+            token.DumpToConsole("Xero OAuth2 token", txt => _log.LogInformation(txt));
+            var scopes = token.GetScopes();
+            Console.WriteLine("Authorised scopes: " + string.Join(", ", scopes));
+            _log.LogInformation("Authorised scopes: {Scopes}", string.Join(", ", scopes));
+            // 4  Persist for future API calls
+            _tokenService.StoreToken(token);
+            _log.LogInformation("Xero token stored (expires {Expiry}).", token.ExpiresAtUtc);
 
             return RedirectToAction("Index", "Home");
         }
 
-        // ─────────────────────────────────────────────────────────────────────────────
-        // GET  /Authorization/Disconnect?tenantId=<guid>
-        // ─────────────────────────────────────────────────────────────────────────────
+        // ───────────────────────────────────────────────────────────────
+        // GET /Authorization/Disconnect?tenantId=<guid>
+        // ───────────────────────────────────────────────────────────────
         [HttpGet]
         [Route("Authorization/Disconnect")]
         public async Task<IActionResult> Disconnect([FromQuery] string tenantId)
         {
             var token = await GetValidXeroTokenAsync();
-            if (token == null || token.Tenants == null || token.Tenants.Count == 0)
+            if (token?.Tenants == null || token.Tenants.Count == 0)
                 return BadRequest("No connected Xero organisation to disconnect.");
 
             var tenant = token.Tenants.FirstOrDefault(t =>

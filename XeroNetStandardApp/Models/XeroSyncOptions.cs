@@ -13,8 +13,10 @@ public sealed class EndpointConfig
 {
     public string Name { get; set; } = string.Empty;
     public string ApiUrl { get; set; } = string.Empty;
-    public string? ResponseKey { get; set; }      // ← you already had this
+    public string? ResponseKey { get; set; }     
     public bool SupportsPagination { get; set; } = true;
+    public int? PageSize { get; set; }
+    public bool SupportsOffset { get; set; } = false; 
     public bool SupportsModifiedSince { get; set; } = true;
     public string? Scopes { get; set; }
 

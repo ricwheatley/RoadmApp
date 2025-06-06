@@ -1,16 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using XeroNetStandardApp.Models;
 
 namespace XeroNetStandardApp.Services
 {
-    /// <summary>
-    /// Pushes raw JSON from the Xero API into Postgres.
-    /// </summary>
     public interface IXeroRawIngestService
     {
-        /// Run every configured endpoint for the tenant (existing behaviour).
-        Task<int> RunOnceAsync(string tenantId);
+        /// <summary>Ingests all configured endpoints for the tenant.</summary>
+        Task<IReadOnlyList<EndpointIngestReport>> RunOnceAsync(string tenantId);
 
-        /// Run just one endpoint for the tenant (NEW).
-        Task<int> RunOnceAsync(string tenantId, string endpointKey);
+        /// <summary>Ingests a single endpoint (identified by <paramref name="endpointKey"/>) for the tenant.</summary>
+        Task<IReadOnlyList<EndpointIngestReport>> RunOnceAsync(string tenantId, string endpointKey);
     }
 }

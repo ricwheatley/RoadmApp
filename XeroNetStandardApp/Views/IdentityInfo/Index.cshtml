@@ -1,8 +1,9 @@
-@model XeroNetStandardApp.Models.EndpointControlPanelViewModel
+﻿@model XeroNetStandardApp.Models.EndpointControlPanelViewModel
 @using System.Text.Json
 @{
     ViewBag.Title = "Endpoint Control Panel";
 }
+@await Html.PartialAsync("_ProcessSummaryModal")
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -48,7 +49,6 @@
     <div class="card-body">
         <h5 class="card-title mb-3">Manual Endpoint Trigger</h5>
 
-        <form asp-action="BulkTrigger" method="post">
             <div class="table-responsive">
                 <table class="table table-sm table-striped table-bordered align-middle">
                     <thead class="table-light">
@@ -61,14 +61,18 @@
                         </tr>
                         <tr>
                             <th>
-                                <button type="submit" name="tenantId" value="ALL" class="btn btn-success btn-sm">
+                                <button type="button"
+                                        class="btn btn-success btn-sm"
+                                        onclick="runIngest('ALL')">
                                     Run All
                                 </button>
                             </th>
                             @foreach (var tenant in Model.Tenants)
                             {
                                 <th class="text-center">
-                                    <button type="submit" name="tenantId" value="@tenant.TenantId" class="btn btn-primary btn-sm">
+                                    <button type="button"
+                                            class="btn btn-primary btn-sm"
+                                            onclick="runIngest('@tenant.TenantId')">
                                         Run Selected
                                     </button>
                                 </th>
@@ -106,7 +110,6 @@
                     </tbody>
                 </table>
             </div>
-        </form>
     </div>
 </div>
 
@@ -120,28 +123,113 @@
     </div>
 </div>
 
-<!-- Summary modal -->
-<div class="modal fade" id="runSummaryModal" tabindex="-1" aria-labelledby="runSummaryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow">
-            <div class="modal-header">
-                <h5 class="modal-title" id="runSummaryModalLabel">Manual Run Summary</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="runSummaryText"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>
+        /* =========================================================
+           GLOBAL HELPERS – visible to runIngest()
+        ========================================================= */
+        const overlay = document.getElementById('runProgress');
+        const msgBox  = document.getElementById('runProgressMessage');
+
+        function showOverlay(msg = 'Processing…') {
+            msgBox.textContent = msg;
+            overlay.classList.remove('d-none');
+        }
+
+        function hideOverlay() {
+            overlay.classList.add('d-none');
+        }
+
+        /* =========================================================
+           AJAX INGEST + MODAL
+        ========================================================= */
+          async function runIngest(tenantId) {
+            // gather selected endpoints for this tenant
+            const selected = [...document.querySelectorAll(`.tenant-${tenantId}:checked`)]
+                            .map(cb => cb.value);
+
+            if (selected.length === 0) {
+                alert('Select at least one endpoint first.');
+                return;
+            }
+
+            showOverlay('Manual data load initiated. Please wait…');
+
+            try {
+                const results = [];
+
+                for (const ep of selected) {
+                    const res = await fetch(`/api/ingest/run/${encodeURIComponent(ep)}?tenantId=${encodeURIComponent(tenantId)}`, {
+                        method: 'POST'
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status} (${ep})`);
+                    results.push(...await res.json().reports);   // merge into one big list
+                }
+
+                renderProcessSummary({
+                    totalInserted: results.reduce((s, r) => s + r.rowsInserted, 0),
+                    reports:       results,
+                    errors:        results.filter(r => r.responseCode !== 200 && r.responseCode !== 304)
+                });
+
+                const modalEl = document.getElementById('processSummaryModal');
+                new bootstrap.Modal(modalEl).show();
+                modalEl.addEventListener('hidden.bs.modal', hideOverlay, { once: true });
+            }
+            catch (err) {
+                hideOverlay();
+                alert(err);
+            }
+        }
+
+
+        function renderProcessSummary(data) {
+            const { totalInserted, reports, errors = [] } = data;
+            const upToDate = reports.length && reports.every(r => r.wasUpToDate);
+
+            let html = '';
+            if (totalInserted > 0) {
+                html += `<p class="text-success fw-semibold">
+                           ✅ ${totalInserted.toLocaleString()} record${totalInserted === 1 ? '' : 's'} inserted.
+                         </p>`;
+            } else if (upToDate) {
+                html += `<p class="text-muted">☑️ No new records since last modified-date.</p>`;
+            }
+
+            if (errors.length) {
+                html += `<p class="text-danger fw-semibold">
+                           ⚠️ ${errors.length} endpoint${errors.length === 1 ? '' : 's'} failed
+                         </p><ul>`;
+                errors.forEach(e => {
+                    html += `<li>${e.endpointName}${e.status ? ' (' + e.status + ')' : ''}
+                                 – HTTP ${e.code}${e.errorDetail ? ': ' + e.errorDetail : ''}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            html += `<details class="mt-3"><summary>Per-endpoint detail</summary>
+                     <table class="table table-sm mt-2">
+                       <thead><tr><th>Endpoint</th><th class="text-end">Rows</th><th>Result</th></tr></thead>
+                       <tbody>${reports.map(r => `
+                         <tr>
+                           <td>${r.endpointName}${r.status ? ' ('+r.status+')' : ''}</td>
+                           <td class="text-end">${r.rowsInserted}</td>
+                           <td>${r.responseCode === 200 ? '✔︎ inserted'
+                                 : r.responseCode === 304 ? '☑︎ up-to-date'
+                                 : '⚠︎ HTTP ' + r.responseCode}</td>
+                         </tr>`).join('')}
+                       </tbody>
+                     </table></details>`;
+
+            document.getElementById('psm-content').innerHTML = html;
+        }
+
+        /* =========================================================
+           DOM-READY SETUP
+        ========================================================= */
         document.addEventListener('DOMContentLoaded', () => {
-            // ----- column toggles -----
+            // column toggles
             document.querySelectorAll('.js-column-toggle').forEach(toggle => {
                 toggle.addEventListener('change', () => {
                     const tid = toggle.dataset.tenant;
@@ -150,32 +238,10 @@
                 });
             });
 
-            // ----- overlay handling -----
-            const form       = document.querySelector('form[asp-action="BulkTrigger"]');
-            const overlay    = document.getElementById('runProgress');
-            const msgBox     = document.getElementById('runProgressMessage');
-            function showOverlay(m = 'Processing�') { msgBox.textContent = m; overlay.classList.remove('d-none'); }
-            function hideOverlay()                   { overlay.classList.add('d-none'); }
-
-            if (form)
-                form.addEventListener('submit', e => {
-                    e.preventDefault();
-                    showOverlay('Manual data load initiated. Please wait�');
-                    setTimeout(() => form.requestSubmit ? form.requestSubmit(e.submitter) : form.submit(), 50);
-                });
-
-            // ----- run-summary modal -----
-            const finalMsg = @Html.Raw(JsonSerializer.Serialize(TempData["RunStatus"]));
-            if (finalMsg) {
-                showOverlay('Loading summary�');
-                document.getElementById('runSummaryText').textContent = finalMsg;
-                const m = $("#runSummaryModal");
-                m.one("hidden.bs.modal", hideOverlay);
-                m.modal("show");
-            }
-
-            // ----- time formatting -----
-            if (typeof formatIsoDates === 'function') formatIsoDates('.last-run');
+            // ISO-date formatting on page load (optional helper)
+            if (typeof formatIsoDates === 'function')
+                formatIsoDates('.last-run');
         });
     </script>
 }
+

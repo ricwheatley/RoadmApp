@@ -1,11 +1,80 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36109.1 d17.14
+VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroNetStandardApp", "XeroNetStandardApp\XeroNetStandardApp.csproj", "{EC11CBCF-95A9-42AD-9C77-824911A94C68}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroNetStandardApp.Tests", "XeroNetStandardApp.Tests\XeroNetStandardApp.Tests.csproj", "{858C929E-2474-4D80-91BD-6459FFF3542E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		dbo\ods\accounts.sql = dbo\ods\accounts.sql
+		dbo\ods\assets.sql = dbo\ods\assets.sql
+		dbo\ods\asset_book_depreciation_settings.sql = dbo\ods\asset_book_depreciation_settings.sql
+		dbo\ods\asset_tracking_items.sql = dbo\ods\asset_tracking_items.sql
+		dbo\ods\asset_types.sql = dbo\ods\asset_types.sql
+		dbo\ods\asset_type_book_depreciation_settings.sql = dbo\ods\asset_type_book_depreciation_settings.sql
+		dbo\ods\bank_transactions.sql = dbo\ods\bank_transactions.sql
+		dbo\ods\bank_transaction_line_items.sql = dbo\ods\bank_transaction_line_items.sql
+		dbo\ods\bank_transaction_line_item_tracking.sql = dbo\ods\bank_transaction_line_item_tracking.sql
+		dbo\ods\bank_transfers.sql = dbo\ods\bank_transfers.sql
+		dbo\ods\bank_transfer_attachments.sql = dbo\ods\bank_transfer_attachments.sql
+		dbo\ods\batch_payments.sql = dbo\ods\batch_payments.sql
+		dbo\ods\batch_payment_payments.sql = dbo\ods\batch_payment_payments.sql
+		dbo\ods\branding_themes.sql = dbo\ods\branding_themes.sql
+		dbo\ods\budgets.sql = dbo\ods\budgets.sql
+		dbo\ods\budget_periods.sql = dbo\ods\budget_periods.sql
+		dbo\ods\contacts.sql = dbo\ods\contacts.sql
+		dbo\ods\contact_addresses.sql = dbo\ods\contact_addresses.sql
+		dbo\ods\contact_attachments.sql = dbo\ods\contact_attachments.sql
+		dbo\ods\contact_groups.sql = dbo\ods\contact_groups.sql
+		dbo\ods\contact_payment_terms.sql = dbo\ods\contact_payment_terms.sql
+		dbo\ods\contact_persons.sql = dbo\ods\contact_persons.sql
+		dbo\ods\contact_phones.sql = dbo\ods\contact_phones.sql
+		dbo\ods\credit_notes.sql = dbo\ods\credit_notes.sql
+		dbo\ods\credit_note_allocations.sql = dbo\ods\credit_note_allocations.sql
+		dbo\ods\credit_note_attachments.sql = dbo\ods\credit_note_attachments.sql
+		dbo\ods\credit_note_line_items.sql = dbo\ods\credit_note_line_items.sql
+		dbo\ods\credit_note_payments.sql = dbo\ods\credit_note_payments.sql
+		dbo\ods\currencies.sql = dbo\ods\currencies.sql
+		dbo\ods\employees.sql = dbo\ods\employees.sql
+		dbo\ods\invoices.sql = dbo\ods\invoices.sql
+		dbo\ods\invoice_allocations.sql = dbo\ods\invoice_allocations.sql
+		dbo\ods\invoice_attachments.sql = dbo\ods\invoice_attachments.sql
+		dbo\ods\invoice_line_items.sql = dbo\ods\invoice_line_items.sql
+		dbo\ods\invoice_line_item_tracking.sql = dbo\ods\invoice_line_item_tracking.sql
+		dbo\ods\invoice_payments.sql = dbo\ods\invoice_payments.sql
+		dbo\ods\invoice_reminders.sql = dbo\ods\invoice_reminders.sql
+		dbo\ods\items.sql = dbo\ods\items.sql
+		dbo\ods\journals.sql = dbo\ods\journals.sql
+		dbo\ods\journal_lines.sql = dbo\ods\journal_lines.sql
+		dbo\ods\linked_transactions.sql = dbo\ods\linked_transactions.sql
+		dbo\ods\manual_journals.sql = dbo\ods\manual_journals.sql
+		dbo\ods\manual_journal_lines.sql = dbo\ods\manual_journal_lines.sql
+		dbo\ods\organisations.sql = dbo\ods\organisations.sql
+		dbo\ods\organisation_addresses.sql = dbo\ods\organisation_addresses.sql
+		dbo\ods\organisation_external_links.sql = dbo\ods\organisation_external_links.sql
+		dbo\ods\organisation_payment_terms.sql = dbo\ods\organisation_payment_terms.sql
+		dbo\ods\organisation_phones.sql = dbo\ods\organisation_phones.sql
+		dbo\ods\overpayments.sql = dbo\ods\overpayments.sql
+		dbo\ods\overpayment_line_items.sql = dbo\ods\overpayment_line_items.sql
+		dbo\ods\payments.sql = dbo\ods\payments.sql
+		dbo\ods\payment_services.sql = dbo\ods\payment_services.sql
+		dbo\ods\prepayments.sql = dbo\ods\prepayments.sql
+		dbo\ods\prepayment_line_items.sql = dbo\ods\prepayment_line_items.sql
+		dbo\ods\purchase_orders.sql = dbo\ods\purchase_orders.sql
+		dbo\ods\purchase_order_line_items.sql = dbo\ods\purchase_order_line_items.sql
+		dbo\ods\quotes.sql = dbo\ods\quotes.sql
+		dbo\ods\quote_line_items.sql = dbo\ods\quote_line_items.sql
+		dbo\ods\repeating_invoices.sql = dbo\ods\repeating_invoices.sql
+		dbo\ods\repeating_invoice_line_items.sql = dbo\ods\repeating_invoice_line_items.sql
+		dbo\ods\tax_rates.sql = dbo\ods\tax_rates.sql
+		dbo\ods\tax_rate_components.sql = dbo\ods\tax_rate_components.sql
+		dbo\ods\tracking_categories.sql = dbo\ods\tracking_categories.sql
+		dbo\ods\tracking_options.sql = dbo\ods\tracking_options.sql
+		dbo\ods\users.sql = dbo\ods\users.sql
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

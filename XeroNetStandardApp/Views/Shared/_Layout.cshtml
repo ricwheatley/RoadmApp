@@ -5,11 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RoadmApp</title>
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/sky-navbar.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    <!-- Bootstrap 5.3.3 CSS – must be last so its rules win -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QYZ4+38AQ0mP757dDFvBwp0XnJpRlPh+jeXR0rSgI7FL3CjcYvj3BCsw2P0p/WeY"
+          crossorigin="anonymous">
+
+    <!-- Bootstrap 5.3.3 bundle JS – Popper included -->
+    <script defer
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-vB94mT50tBkOnuDZlw3NHHj6Y8gn9fwkwv99i+N5ov7iF9IKeSoCI6EnA5UZbLSe"
+            crossorigin="anonymous"></script>
+    
 
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -63,7 +72,8 @@
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
     <script>

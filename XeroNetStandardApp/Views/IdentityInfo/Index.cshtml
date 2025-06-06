@@ -144,44 +144,55 @@
         /* =========================================================
            AJAX INGEST + MODAL
         ========================================================= */
-          async function runIngest(tenantId) {
-            // gather selected endpoints for this tenant
+        async function runIngest(tenantId) {
+            // 1 – which endpoints are ticked for this tenant?
             const selected = [...document.querySelectorAll(`.tenant-${tenantId}:checked`)]
                             .map(cb => cb.value);
 
             if (selected.length === 0) {
-                alert('Select at least one endpoint first.');
+                alert('Tick at least one endpoint first.');   // guard against empty list
                 return;
             }
 
             showOverlay('Manual data load initiated. Please wait…');
 
             try {
-                const results = [];
+                const allReports = [];
 
+                // call the server once per endpoint **via the polling route**
                 for (const ep of selected) {
-                    const res = await fetch(`/api/ingest/run/${encodeURIComponent(ep)}?tenantId=${encodeURIComponent(tenantId)}`, {
-                        method: 'POST'
-                    });
+                    const res = await fetch(`/api/poll/run/${encodeURIComponent(ep)}?tenantId=${encodeURIComponent(tenantId)}`,
+                                            { method: 'POST' });
                     if (!res.ok) throw new Error(`HTTP ${res.status} (${ep})`);
-                    results.push(...await res.json().reports);   // merge into one big list
+
+                    const payload = await res.json();        // await resolves the Promise
+                    allReports.push(...payload.reports);     // iterable now, no TypeError
                 }
 
+                // summarise into the shape renderProcessSummary expects
                 renderProcessSummary({
-                    totalInserted: results.reduce((s, r) => s + r.rowsInserted, 0),
-                    reports:       results,
-                    errors:        results.filter(r => r.responseCode !== 200 && r.responseCode !== 304)
+                    totalInserted: allReports.reduce((s, r) => s + r.rowsInserted, 0),
+                    reports:       allReports,
+                    errors:        allReports.filter(r =>
+                                      r.responseCode !== 200 && r.responseCode !== 304)
                 });
 
                 const modalEl = document.getElementById('processSummaryModal');
-                new bootstrap.Modal(modalEl).show();
-                modalEl.addEventListener('hidden.bs.modal', hideOverlay, { once: true });
+                const modal   = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                // when the modal closes, hide the overlay **and refresh summary+logs**
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                    hideOverlay();
+                    location.reload();     // repopulates Last-Run and Logs via MVC
+                }, { once: true });
             }
             catch (err) {
                 hideOverlay();
-                alert(err);
+                alert('Ingest failed: ' + err);
             }
         }
+
 
 
         function renderProcessSummary(data) {

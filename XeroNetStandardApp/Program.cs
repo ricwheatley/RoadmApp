@@ -31,7 +31,6 @@ if (builder.Configuration.GetValue<bool>("EnablePollingScheduler"))
     builder.Services.AddHostedService<PollingScheduler>();
 }
 builder.Services.AddSession();
-builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"./keys"))
     // .ProtectKeysWithDpapi()
@@ -59,12 +58,9 @@ app.UseAuthorization();
 
 app.UseSession();
 
-app.UseMvc(routes =>
-{
-    routes.MapRoute(
-        name: "default",
-        template: "{controller=Home}/{action=Index}/{id?}");
-});
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 

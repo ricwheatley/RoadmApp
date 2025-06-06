@@ -129,3 +129,5 @@ body.dark-mode {
 viewBox='0 0 16 16' fill='%23000'%3E%3Cpath d='M2.5 2.5l11 11m0-11l-11 11' \
 stroke='%23000' stroke-width='2'/%3E%3C/svg%3E");
 }
+.table thead th { background-color: #fff !important; }
+.table small { font-weight: normal; }

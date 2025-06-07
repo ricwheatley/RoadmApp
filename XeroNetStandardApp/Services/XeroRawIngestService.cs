@@ -408,32 +408,75 @@ namespace XeroNetStandardApp.Services
         {
             var root = JsonDocument.Parse(bodyJson).RootElement;
 
+            // ── locate the array ───────────────────────────────────────────────
             JsonElement arrayElement;
+
             if (string.IsNullOrEmpty(endpoint.ResponseKey) && root.ValueKind == JsonValueKind.Array)
             {
-                arrayElement = root; // bare array
+                arrayElement = root;   // payload is a bare array
             }
             else
             {
                 var key = endpoint.ResponseKey
-                       ?? (endpoint.Name.EndsWith("s", StringComparison.Ordinal)
-                           ? endpoint.Name
-                           : endpoint.Name + "s");
+                         ?? (endpoint.Name.EndsWith("s", StringComparison.Ordinal)
+                             ? endpoint.Name
+                             : endpoint.Name + "s");
 
+                _log.LogInformation("[DEBUG] Endpoint {Endpoint} – looking for JSON key '{Key}'",
+                                       endpoint.Name, key);
+
+                // exact-case first
                 if (!root.TryGetProperty(key, out arrayElement))
-                    return 0;   // nothing recognised – skip safely
+                {
+                    // try case-insensitive
+                    var match = root.EnumerateObject()
+                                    .FirstOrDefault(p => string.Equals(p.Name, key,
+                                                             StringComparison.OrdinalIgnoreCase));
+
+                    if (match.Equals(default(JsonProperty)))
+                    {
+                        var keys = string.Join(", ", root.EnumerateObject().Select(p => p.Name));
+                        _log.LogWarning("[WARN] Key '{Key}' not found. Top-level keys: {Keys}",
+                                           key, keys);
+                        return 0;
+                    }
+
+                    arrayElement = match.Value;
+                }
             }
 
-            const string sql =
-                @"INSERT INTO {0} (page_number, payload_json, tenant_id)
-                  VALUES (@Page, @Payload::jsonb, @TenantId);";
+            var rowCount = arrayElement.GetArrayLength();
+            _log.LogInformation("[DEBUG] {Endpoint} page {Page} – {Count} rows detected",
+                                   endpoint.Name, page, rowCount);
+
+            if (rowCount == 0)
+                return 0;
+
+            // ── insert ─────────────────────────────────────────────────────────
+            const string sql = @"
+        INSERT INTO {0} (page_number, payload_json, tenant_id)
+        VALUES (@Page, @Payload::jsonb, @TenantId);";
 
             foreach (var el in arrayElement.EnumerateArray())
-                await conn.ExecuteAsync(string.Format(sql, table),
-                                        new { Page = page, Payload = el.GetRawText(), TenantId = tenantId });
+            {
+                if (page == 1
+                    && endpoint.Name.Equals("Users", StringComparison.Ordinal)
+                    && el.TryGetProperty("UserID", out var idProp))
+                {
+                    _log.LogInformation("[DEBUG] First UserID = {User}", idProp.GetString());
+                }
 
-            return arrayElement.GetArrayLength();
+                await conn.ExecuteAsync(string.Format(sql, table), new
+                {
+                    Page = page,
+                    Payload = el.GetRawText(),
+                    TenantId = tenantId
+                });
+            }
+
+            return rowCount;
         }
+
     }
 }
 

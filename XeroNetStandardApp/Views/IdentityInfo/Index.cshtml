@@ -15,11 +15,12 @@
                     <tr>
                         <th>Organisation</th>
                         <th>Last&nbsp;Call</th>
-                        <th>Successes</th>
-                        <th>Failures</th>
-                        <th>Rows&nbsp;Inserted</th>
+                        <th class="text-end">Successes</th>
+                        <th class="text-end">Failures</th>
+                        <th class="text-end">Rows&nbsp;Inserted</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @foreach (var t in Model.Tenants)
                     {
@@ -33,9 +34,9 @@
                                     data-timestamp="@s.LastCall.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")">
                                 </td>
 
-                                <td>@s.EndpointsSuccess</td>
-                                <td>@s.EndpointsFail</td>
-                                <td>@s.RecordsInserted.ToString("N0")</td>
+                                <td class="text-end">@s.EndpointsSuccess</td>
+                                <td class="text-end">@s.EndpointsFail</td>
+                                <td class="text-end">@s.RecordsInserted.ToString("N0")</td>
                             </tr>
                         }
                     }

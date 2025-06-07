@@ -1,0 +1,61 @@
+﻿/* ============================================================================
+   RoadmApp – custom Bootstrap overrides (tables + footer row)
+   Apply by adding class="table table-striped roadmapp-table" to each table.
+   ============================================================================ */
+
+/* ---------- Shared colour variables ----------------------------------- */
+.roadmapp-table,
+footer.footer {
+    --rd-border-light: #e6e9ec; /* 20 % lighter than default border */
+    --rd-stripe-light: #f7f9fa; /* pale grey for zebra rows         */
+}
+
+/* ---------- Table tweaks ---------------------------------------------- */
+.roadmapp-table {
+    /* lighter borders & stripes */
+    --bs-table-border-color: var(--rd-border-light);
+    --bs-table-striped-bg: var(--rd-stripe-light);
+}
+
+    /* remove inner vertical lines */
+    .roadmapp-table th,
+    .roadmapp-table td {
+        border-right: 0 !important;
+    }
+
+    /* remove left border on first cell */
+    .roadmapp-table tr > *:first-child {
+        border-left: 0 !important;
+    }
+
+    /* lighter header bottom border */
+    .roadmapp-table thead th {
+        border-bottom: 2px solid var(--rd-border-light) !important;
+    }
+
+    /* keep the “Add New” (action) row white */
+    .roadmapp-table tbody tr.action-row,
+    .roadmapp-table tbody tr:last-child {
+        background-color: #ffffff !important;
+    }
+
+/* ---------- Page footer override (unchanged) -------------------------- */
+footer.footer {
+    background-color: #ffffff !important;
+    border-top: 1px solid var(--rd-border-light);
+}
+
+/* ---------- 6. Table footer stays white ------------------------------- */
+/* If you wrap totals / “Add New” etc. in a real <tfoot> */
+.roadmapp-table tfoot,
+.roadmapp-table tfoot tr,
+.roadmapp-table tfoot th,
+.roadmapp-table tfoot td {
+    background-color: #ffffff !important; /* override any stripe var   */
+}
+
+/* If your footer row is still inside <tbody>, give it class="table-footer"
+   OR rely on .action-row / :last-child above                            */
+.roadmapp-table tbody tr.table-footer {
+    background-color: #ffffff !important;
+}
